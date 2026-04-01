@@ -83,7 +83,9 @@ La asignatura de Modelos de Inteligencia Artificial tiene como propósito fundam
 📂 [`UD1_IntroducionIA/`](./UD1_IntroducionIA/)
 
 Este bloque establece la base conceptual que da origen al estudio de la IA, profundizando en su concepto, enfoques, hitos históricos y las múltiples aplicaciones modernas.
+
 **Conceptos clave:** `Test de Turing` · `Agentes inteligentes` · `Historia de la IA`
+
 **Tecnologías:** `Ninguna`
 
 ---
@@ -93,7 +95,9 @@ Este bloque establece la base conceptual que da origen al estudio de la IA, prof
 📂 [`UD2_TiposIA/`](./UD2_TiposIA/)
 
 Analiza las jerarquías de la Inteligencia Artificial de acuerdo a su progreso funcional, diferenciando de la IA estrecha a la Autoconsciencia y sistemas superinteligentes.
+
 **Conceptos clave:** `IA débil y general (AGI)` · `Sistemas reactivos` · `Teoría de la mente`
+
 **Tecnologías:** `Ninguna`
 
 ---
@@ -103,7 +107,9 @@ Analiza las jerarquías de la Inteligencia Artificial de acuerdo a su progreso f
 📂 [`UD3_SistemasExpertos/`](./UD3_SistemasExpertos/)
 
 Estudio de sistemas mediante reglas y arquitectura, extendiendo al uso del entorno probabilístico utilizando algoritmos clasificadores Naive Bayes y redes bayesianas.
+
 **Conceptos clave:** `Inferencia` · `Clasificador Naive Bayes` · `MultinomialNB y BernoulliNB` · `Imputación de datos`
+
 **Tecnologías:** `Python` · `scikit-learn` · `pandas` · `numpy`
 
 ---
@@ -113,7 +119,9 @@ Estudio de sistemas mediante reglas y arquitectura, extendiendo al uso del entor
 📂 [`UD4_SistemasCognitivos/`](./UD4_SistemasCognitivos/)
 
 Estudia arquitecturas y marcos teóricos que facilitan sistemas inspirados en facultades humanas como el análisis integral, el aprendizaje continuo y la comprensión en su contexto interactivo.
+
 **Conceptos clave:** `Computación Cognitiva` · `Razonamiento simbólico`
+
 **Tecnologías:** `Ninguna`
 
 ---
@@ -123,7 +131,9 @@ Estudia arquitecturas y marcos teóricos que facilitan sistemas inspirados en fa
 📂 [`UD5_PrincipiosLegalesIA/`](./UD5_PrincipiosLegalesIA/)
 
 Centra su esfuerzo en establecer los requerimientos de la Unión Europea y leyes vigentes en IA para asegurar la legalidad y transparencia (RGPD), dando importancia también a las prácticas rigurosas de anonimización.
+
 **Conceptos clave:** `RGPD` · `Reglamento IA` · `Anonimización` · `Privacidad de datos`
+
 **Tecnologías:** `Ninguna`
 
 ---
@@ -133,7 +143,9 @@ Centra su esfuerzo en establecer los requerimientos de la Unión Europea y leyes
 📂 [`UD6_ProcesamientoLenguajeNatural/`](./UD6_ProcesamientoLenguajeNatural/)
 
 Práctica donde se resuelven y entienden retos de PNL estructurando, vectorizando y categorizando datos procedentes de tweets reales desarrollando con Regresión Logística y la validación de sus métricas.
+
 **Conceptos clave:** `Limpieza de texto` · `TF-IDF` · `Regresión logística (Sentiment Analysis)` · `Nubes de palabras`
+
 **Tecnologías:** `Python` · `scikit-learn` · `pandas` · `wordcloud`
 
 ---
@@ -143,7 +155,9 @@ Práctica donde se resuelven y entienden retos de PNL estructurando, vectorizand
 📂 [`UD7_ServiciosVoz/`](./UD7_ServiciosVoz/)
 
 Estudio general y su directa implementación en casos orientando una síntesis textual a la simulación fonética humana en español a través de herramientas cognitivas tanto de síntesis global (Google) y neuronales (Edge) para concluir también con el reconocimiento ASR.
+
 **Conceptos clave:** `SSML` · `Síntesis (TTS)` · `ASR` · `Traducción PNL`
+
 **Tecnologías:** `gTTS` · `edge-tts` · `SpeechRecognition` · `deep-translator`
 
 ---
@@ -153,7 +167,9 @@ Estudio general y su directa implementación en casos orientando una síntesis t
 📂 [`UD8_CompresionLenguajeNatural/`](./UD8_CompresionLenguajeNatural/)
 
 Se focaliza completamente en el paradigma general NLU utilizando herramientas de extracción de información para captar las intenciones (clasificándolas) dentro del flujo en conversaciones de texto.
+
 **Conceptos clave:** `Extracción de Entidades (NER)` · `Detección de intenciones` · `Slots`
+
 **Tecnologías:** `spaCy` · `Gradio` · `scikit-learn` · `re`
 
 ---
@@ -163,7 +179,9 @@ Se focaliza completamente en el paradigma general NLU utilizando herramientas de
 📂 [`UD9_ImplementacionesChatbot(Discriminativo)/`](<./UD9_ImplementacionesChatbot(Discriminativo)/>)
 
 Fase culminante donde se crea e implanta BankBot (un robot discriminacional) mediante servicios "As a Service" de Amazon implementando y operando el backend logístico en Serverless Lambda Functions y FrontEnd de Amazon Lex de cara a intenciones concretas.
+
 **Conceptos clave:** `Flujos dialógicos` · `Bot Conversacional en Nube` · `Serverless Backend`
+
 **Tecnologías:** `Amazon AWS Lex` · `AWS Lambda` · `Python` · `JSON`
 
 ---
@@ -173,7 +191,9 @@ Fase culminante donde se crea e implanta BankBot (un robot discriminacional) med
 📂 [`UD10_IA&Etica/`](./UD10_IA&Etica/)
 
 Cierre ético en que se asientan discusiones reales alrededor del desvío moral o sesgo equitativo inherente que acarrean los diferentes acercamientos dentro de la Inteligencia Artificial obligando reflexionar.
+
 **Conceptos clave:** `Sesgos y equidad` · `Responsabilidad del Algoritmo` · `Transparencia` · `Gobernanza`
+
 **Tecnologías:** `Ninguna`
 
 ---
@@ -183,7 +203,9 @@ Cierre ético en que se asientan discusiones reales alrededor del desvío moral 
 📂 [`Examen/`](./Examen/)
 
 Espacio de formación preparatoria organizado según convocatorias (Enero/Abril) el cual integra de gran forma revisiones generales, notas condensadas y evaluaciones de muestra de los temas centrales.
+
 **Conceptos clave:** `Repaso UD1-UD5` · `Ejercicios resueltos` · `Pruebas de evaluación`
+
 **Tecnologías:** `Ninguna`
 
 ---
