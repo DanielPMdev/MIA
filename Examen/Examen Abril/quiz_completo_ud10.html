@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Completo — UD10 IA y Ética</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0a1e;
+  --card: #1a1333;
+  --card-border: #2d2450;
+  --text: #f0eef5;
+  --text-dim: #9890b0;
+  --correct: #22c55e;
+  --wrong: #ef4444;
+  --accent: #8b5cf6;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+body::before {
+  content:''; position:fixed; inset:0; z-index:0;
+  background: radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.12) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.08) 0%, transparent 50%);
+}
+.app { position:relative; z-index:1; max-width:800px; margin:0 auto; padding:20px; }
+
+.header { text-align:center; padding:30px 0 10px; }
+.header h1 {
+  font-family:'Playfair Display',serif; font-size:clamp(1.6rem,4vw,2.4rem); font-weight:800;
+  background:linear-gradient(135deg,#c084fc,#60a5fa,#34d399);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.header p { color:var(--text-dim); font-size:0.85rem; margin-top:6px; }
+
+.progress-bar { width:100%; height:8px; background:#2d2450; border-radius:99px; margin:16px 0; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#60a5fa); border-radius:99px; transition:width 0.5s ease; }
+.progress-text { display:flex; justify-content:space-between; font-size:0.78rem; color:var(--text-dim); margin-bottom:4px; }
+
+.question-card {
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:20px; padding:24px; margin-bottom:16px;
+  animation:fadeIn 0.4s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+
+.q-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px; }
+.q-number { font-size:0.72rem; color:#8b5cf6; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; }
+.q-category {
+  display:inline-block; padding:3px 10px; border-radius:99px;
+  font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;
+}
+.cat-riesgo { background:rgba(239,68,68,0.15); color:#f87171; }
+.cat-espana { background:rgba(251,191,36,0.15); color:#fbbf24; }
+.cat-etica { background:rgba(52,211,153,0.15); color:#34d399; }
+.cat-transparencia { background:rgba(96,165,250,0.15); color:#60a5fa; }
+.cat-neurotec { background:rgba(192,132,252,0.15); color:#c084fc; }
+.cat-robots { background:rgba(251,146,60,0.15); color:#fb923c; }
+
+.q-text { font-size:1rem; font-weight:500; line-height:1.65; }
+
+.options { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+.opt-btn {
+  border:2px solid var(--card-border); background:rgba(45,36,80,0.5);
+  border-radius:14px; padding:14px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:600;
+  color:var(--text); cursor:pointer;
+  transition:all 0.25s ease;
+  text-align:left; line-height:1.4;
+}
+.opt-btn:hover:not(.disabled) { border-color:#8b5cf6; background:rgba(139,92,246,0.1); transform:translateY(-2px); }
+.opt-btn .opt-letter {
+  display:inline-block; width:24px; height:24px; border-radius:6px;
+  background:rgba(139,92,246,0.2); text-align:center; line-height:24px;
+  font-size:0.72rem; font-weight:800; margin-right:8px; color:#c084fc;
+  vertical-align:middle;
+}
+
+.opt-btn.selected-correct { border-color:var(--correct); background:rgba(34,197,94,0.12); animation:popCorrect 0.4s ease; }
+.opt-btn.selected-wrong { border-color:var(--wrong); background:rgba(239,68,68,0.12); animation:shake 0.4s ease; }
+.opt-btn.reveal-correct { border-color:var(--correct); background:rgba(34,197,94,0.08); }
+.opt-btn.disabled { cursor:default; opacity:0.45; }
+.opt-btn.disabled.selected-correct, .opt-btn.disabled.reveal-correct { opacity:1; }
+.opt-btn.disabled.selected-wrong { opacity:0.75; }
+
+@keyframes popCorrect { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
+
+.feedback { border-radius:14px; padding:18px; margin-top:14px; animation:fadeIn 0.3s ease; line-height:1.6; }
+.feedback.correct { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.25); }
+.feedback.wrong { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); }
+.feedback .fb-title { font-weight:800; font-size:1rem; margin-bottom:6px; }
+.feedback.correct .fb-title { color:var(--correct); }
+.feedback.wrong .fb-title { color:var(--wrong); }
+.feedback .fb-text { font-size:0.83rem; color:var(--text-dim); }
+.feedback .fb-text strong { color:var(--text); }
+
+.next-btn {
+  display:block; width:100%; margin-top:14px; padding:15px;
+  background:linear-gradient(135deg,#8b5cf6,#6366f1);
+  border:none; border-radius:14px;
+  color:white; font-family:'DM Sans',sans-serif;
+  font-size:0.92rem; font-weight:700;
+  cursor:pointer; transition:all 0.25s;
+}
+.next-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(139,92,246,0.3); }
+
+.results { text-align:center; padding:30px 10px; animation:fadeIn 0.5s ease; }
+.score-circle {
+  width:150px; height:150px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  margin:0 auto 20px;
+  font-size:2.3rem; font-weight:800;
+  font-family:'Playfair Display',serif;
+}
+.score-label { font-size:0.75rem; font-weight:500; color:var(--text-dim); }
+.results h2 { font-family:'Playfair Display',serif; font-size:1.6rem; margin-bottom:6px; }
+.results > p { color:var(--text-dim); font-size:0.85rem; margin-bottom:24px; max-width:500px; margin-left:auto; margin-right:auto; }
+.stat-row { display:flex; justify-content:center; gap:24px; margin-bottom:24px; }
+.stat { text-align:center; }
+.stat .num { font-size:1.4rem; font-weight:800; }
+.stat .lbl { font-size:0.68rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; }
+
+.cat-summary { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:24px; }
+.cat-chip { padding:5px 12px; border-radius:99px; font-size:0.72rem; font-weight:700; }
+
+.review-section { text-align:left; margin-top:16px; }
+.review-section h3 { margin-bottom:12px; font-size:0.8rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; }
+.review-item {
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:12px; padding:14px; margin-bottom:8px;
+  font-size:0.8rem; line-height:1.5;
+}
+.review-item .ri-q { color:var(--text-dim); margin-bottom:4px; }
+.review-item strong { color:var(--text); }
+
+@media(max-width:600px) {
+  .options { grid-template-columns:1fr; }
+  .header h1 { font-size:1.4rem; }
+  .q-text { font-size:0.92rem; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const questions = [
+  // === NIVELES DE RIESGO ===
+  {
+    text: "Una empresa de marketing analiza los rasgos faciales de usuarios en su web para detectar su estado de ánimo y adaptar anuncios. ¿Qué nivel de riesgo?",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 2, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Riesgo limitado.</strong> El reconocimiento de emociones en un contexto comercial NO está prohibido, pero requiere informar a los usuarios (transparencia). Solo se prohíbe en centros educativos y en el lugar de trabajo."
+  },
+  {
+    text: "Un instituto instala cámaras con IA que detectan si los alumnos están prestando atención en clase analizando sus expresiones faciales.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Prohibido.</strong> El reconocimiento de emociones en centros educativos está expresamente prohibido por el Art. 5. Misma tecnología que en la pregunta anterior, pero el CONTEXTO lo cambia todo."
+  },
+  {
+    text: "Un supermercado usa IA para analizar datos de compra y asignar una \"puntuación de fidelidad\" que da descuentos personalizados. ¿Es social scoring?",
+    options: ["Sí, es riesgo inaceptable","No, es riesgo alto","No, es riesgo limitado","No, es riesgo mínimo"],
+    correct: 3, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Riesgo mínimo.</strong> NO es social scoring. La puntuación social prohibida evalúa el comportamiento social general para causar trato perjudicial. Aquí solo se analizan datos de compra para dar descuentos: es una práctica comercial legítima."
+  },
+  {
+    text: "Un colegio usa IA para detectar si los alumnos copian en los exámenes, analizando movimientos oculares y giros de cabeza con cámaras.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 1, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Riesgo alto.</strong> Detectar <em>comportamientos</em> prohibidos durante exámenes está en el Anexo III.3d. La clave: se detectan comportamientos (copiar), NO emociones. Si analizase estrés o nerviosismo, sería prohibido."
+  },
+  {
+    text: "Una empresa de RRHH usa IA que analiza expresiones faciales y tono de voz en las entrevistas de trabajo para puntuar la \"idoneidad\" de los candidatos.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Prohibido.</strong> El reconocimiento de emociones en el ámbito laboral está expresamente vetado por el Art. 5. No importa que la selección de personal por IA sea alto riesgo: el reconocimiento de emociones en el trabajo lo hace prohibido."
+  },
+  {
+    text: "Un hospital usa IA para clasificar pacientes de urgencias según gravedad (triaje) y decidir quién se atiende primero.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 1, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Riesgo alto.</strong> Los sistemas de triaje médico y clasificación de emergencias están en el Anexo III como alto riesgo: toman decisiones críticas para la vida de las personas."
+  },
+  {
+    text: "La policía instala reconocimiento facial en tiempo real en una plaza para identificar a todos los transeúntes y comprobar antecedentes.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Prohibido.</strong> La identificación biométrica remota en tiempo real en espacios públicos está prohibida (Art. 5). Solo se permite en excepciones estrictas: búsqueda de víctimas de secuestro, prevención de atentados inminentes."
+  },
+
+  // === TRANSPARENCIA ===
+  {
+    text: "Una empresa genera un deepfake de un político y lo difunde en redes sin indicar que es artificial. ¿Qué nivel de riesgo tiene la TECNOLOGÍA en sí?",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 2, category: "transparencia", catLabel: "Transparencia",
+    explanation: "<strong>Riesgo limitado.</strong> Los deepfakes NO están prohibidos. El Art. 50 obliga a revelar que el contenido es artificial. Aquí se incumple esa obligación (infracción), pero la tecnología en sí no es de riesgo inaceptable."
+  },
+  {
+    text: "Un chatbot de atención al cliente dice al inicio: \"Estás hablando con nuestro asistente virtual Sara\". ¿Qué obligación está cumpliendo?",
+    options: ["Gestión de riesgos del Art. 9","Obligación de transparencia del Art. 50","Evaluación de conformidad del Art. 43","Código de conducta del Art. 69"],
+    correct: 1, category: "transparencia", catLabel: "Transparencia",
+    explanation: "<strong>Art. 50 — Transparencia.</strong> Los sistemas de IA que interactúan con personas deben informar al usuario de que están hablando con una máquina. Es una obligación de los sistemas de riesgo limitado."
+  },
+
+  // === MARCO ESPAÑOL ===
+  {
+    text: "¿Qué organismo español tiene su sede en A Coruña y se encarga de la supervisión del uso de la IA en España?",
+    options: ["El Consejo Asesor de IA","La ENIA","La AESIA","El OBISAL"],
+    correct: 2, category: "espana", catLabel: "Marco español",
+    explanation: "<strong>AESIA</strong> — Agencia Española de Supervisión de Inteligencia Artificial. Tiene su sede en A Coruña desde diciembre de 2022 y se encarga de la supervisión y vigilancia del mercado de IA en España."
+  },
+  {
+    text: "La Estrategia Nacional de Inteligencia Artificial (ENIA) forma parte de un plan estratégico más amplio. ¿Cuál?",
+    options: ["Carta de Derechos Digitales","España Digital 2025/2026","Reglamento UE 2024/1689","Agenda 2030"],
+    correct: 1, category: "espana", catLabel: "Marco español",
+    explanation: "<strong>España Digital 2025</strong> (actualizado a 2026). La ENIA está dentro del eje 9 de este plan, dedicado a «Economía del dato e Inteligencia Artificial». Su objetivo es un marco de referencia para una IA inclusiva y centrada en la ciudadanía."
+  },
+  {
+    text: "¿Qué es un \"sandbox regulatorio\" en el contexto de la IA?",
+    options: ["Un lenguaje de programación para IA","Un entorno controlado para probar sistemas de IA antes de su lanzamiento","Una base de datos de sistemas de IA prohibidos","Un certificado de calidad ética para IA"],
+    correct: 1, category: "espana", catLabel: "Marco español",
+    explanation: "<strong>Entorno controlado de pruebas.</strong> El sandbox permite a empresas (especialmente pymes y startups) probar sus sistemas de IA bajo supervisión de la AESIA y verificar que cumplen con la normativa antes de salir al mercado."
+  },
+  {
+    text: "¿Cuál de estos NO es un elemento del marco español España Digital 2026?",
+    options: ["Sello IA Confiable","OBISAL (Observatorio Social y Ético de los Algoritmos)","Agencia Nacional de Supervisión de la IA","Tribunal Europeo de Inteligencia Artificial"],
+    correct: 3, category: "espana", catLabel: "Marco español",
+    explanation: "No existe un \"Tribunal Europeo de IA\". España Digital 2026 incluye la AESIA, el Sello IA Confiable, el OBISAL y el Sandbox regulatorio, entre otros."
+  },
+
+  // === CARTA DE DERECHOS DIGITALES ===
+  {
+    text: "Según la Carta de Derechos Digitales de España (Art. XXV), ¿qué principio fundamental debe asegurar la IA?",
+    options: ["Maximizar los beneficios económicos","Un enfoque centrado en la persona y su dignidad","La sustitución total del trabajo humano","La eliminación de toda regulación"],
+    correct: 1, category: "espana", catLabel: "Marco español",
+    explanation: "<strong>Enfoque centrado en la persona.</strong> El Art. XXV establece que la IA debe perseguir el bien común, asegurar la no maleficencia y garantizar la no discriminación, la transparencia, la auditabilidad y la supervisión humana."
+  },
+
+  // === NEUROTECNOLOGÍA ===
+  {
+    text: "Un dispositivo neuronal tipo Neuralink recopila datos cerebrales de un paciente. Según la Carta de Derechos Digitales (Art. XXVI), ¿qué debe garantizarse?",
+    options: ["Que los datos se vendan solo a empresas europeas","La confidencialidad de los datos cerebrales y el pleno dominio del usuario sobre ellos","Que el dispositivo sea de código abierto","Que solo lo usen mayores de 25 años"],
+    correct: 1, category: "neurotec", catLabel: "Neurotecnología",
+    explanation: "<strong>Privacidad de datos cerebrales.</strong> El Art. XXVI protege la identidad individual, la autodeterminación, la confidencialidad de los datos neuronales, la integridad física/psíquica y evita que decisiones sean condicionadas por intromisiones cerebrales."
+  },
+  {
+    text: "¿Cuál de estos objetivos NO pertenece al Art. XXVI sobre neurotecnologías de la Carta de Derechos Digitales?",
+    options: ["Preservar la identidad individual","Garantizar la autodeterminación en la toma de decisiones","Asegurar que España sea líder mundial en implantes cerebrales","Ordenar el uso de interfaces persona-máquina que afecten la integridad"],
+    correct: 2, category: "neurotec", catLabel: "Neurotecnología",
+    explanation: "El Art. XXVI no habla de liderazgo comercial. Sus fines son: preservar la identidad, garantizar la autodeterminación, asegurar la confidencialidad de datos cerebrales y regular las interfaces que afecten la integridad física o psíquica."
+  },
+
+  // === LEYES DE ASIMOV Y ROBÓTICA ===
+  {
+    text: "Según las Leyes de Asimov, un robot recibe la orden de destruir un objeto valioso para su dueño. ¿Qué debe hacer?",
+    options: ["Obedecer siempre al humano (2ª Ley)","Negarse porque la 1ª Ley prevalece","Obedecer, ya que no hay daño a humanos","Autodestruirse por conflicto de leyes"],
+    correct: 2, category: "robots", catLabel: "Ética y robótica",
+    explanation: "<strong>Obedecer.</strong> La 1ª Ley prohíbe dañar humanos, no objetos. La 2ª Ley dice que los robots cumplirán las órdenes salvo que entren en conflicto con la 1ª. Destruir un objeto no daña a un humano, así que el robot obedece."
+  },
+  {
+    text: "¿En qué año y obra literaria formuló Isaac Asimov sus tres leyes de la robótica?",
+    options: ["1950, Yo, Robot","1942, Círculo Vicioso (Runaround)","1968, 2001: Una odisea del espacio","1984, Neuromante"],
+    correct: 1, category: "robots", catLabel: "Ética y robótica",
+    explanation: "<strong>1942, Círculo Vicioso (Runaround).</strong> Aunque \"Yo, Robot\" (1950) popularizó las leyes, estas aparecieron por primera vez en el relato \"Runaround\" de 1942."
+  },
+  {
+    text: "¿Cuál de estos NO es un principio del marco ético del Parlamento Europeo para robots?",
+    options: ["Respetar el rechazo a ser cuidado por un robot","Proteger la privacidad de datos en coches autónomos y drones","Los robots deben tener personalidad jurídica propia con derechos civiles","Evitar la disolución de los lazos sociales"],
+    correct: 2, category: "robots", catLabel: "Ética y robótica",
+    explanation: "El PE no establece personalidad jurídica con derechos civiles para robots. Sus principios incluyen: dignidad humana, respetar el rechazo al robot, libertad, privacidad, protección ante manipulación, lazos sociales, igualdad de acceso y regulación del transhumanismo."
+  },
+
+  // === VEHÍCULOS AUTÓNOMOS ===
+  {
+    text: "Un coche autónomo se queda sin frenos: puede atropellar a un peatón o desviarse y poner en peligro al pasajero. ¿A qué dilema ético clásico se asemeja?",
+    options: ["Dilema del prisionero","Dilema del trolley (Moral Machine)","Paradoja de Turing","Problema del marco (Frame Problem)"],
+    correct: 1, category: "etica", catLabel: "Ética y IA",
+    explanation: "<strong>Dilema del trolley / Moral Machine.</strong> Es el dilema clásico de los vehículos autónomos: ¿a quién debe proteger la máquina cuando un daño es inevitable? El proyecto Moral Machine del MIT investigó las preferencias morales de personas de todo el mundo."
+  },
+
+  // === SESGOS Y DATOS ===
+  {
+    text: "Un sistema de IA de alto riesgo para selección de personal fue entrenado solo con datos de empleados varones. ¿Qué requisito del Reglamento está incumpliendo?",
+    options: ["Art. 50 — Transparencia","Art. 10 — Datos representativos, completos y sin sesgos","Art. 69 — Código de conducta","Art. 5 — Prácticas prohibidas"],
+    correct: 1, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Art. 10 — Gobernanza de datos.</strong> Los datos de entrenamiento de sistemas de alto riesgo deben ser representativos, pertinentes, sin sesgos y completos. Entrenar solo con datos de hombres genera un sesgo de género que discrimina a las mujeres."
+  },
+
+  // === AESIA / ANTEPROYECTO ===
+  {
+    text: "Según el Anteproyecto de Ley español, ¿qué multa puede imponerse por una infracción MUY GRAVE en sistemas de IA prohibidos?",
+    options: ["De 500 a 7.500 €","De 6.000 a 500.000 €","De 500.001 a 7.500.000 €","De 7.500.001 a 35.000.000 € (o 2-7% del volumen de negocio)"],
+    correct: 3, category: "espana", catLabel: "Marco español",
+    explanation: "<strong>De 7,5M a 35M € (o 2-7% del volumen de negocio mundial).</strong> Las infracciones muy graves por prácticas prohibidas de IA tienen las sanciones más altas. Las de alto riesgo van de 7,5M a 15M € (2-3%)."
+  },
+
+  // === MÁS TRAMPAS DE RIESGO ===
+  {
+    text: "Un ayuntamiento recopila datos de redes sociales, multas y denuncias vecinales para asignar puntuaciones que determinan el acceso a vivienda pública.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Prohibido (Social Scoring).</strong> Evalúa a personas por su comportamiento social en múltiples contextos durante un período de tiempo, y el resultado les causa trato perjudicial (denegar vivienda). Es exactamente lo que prohíbe el Art. 5c."
+  },
+  {
+    text: "Un juguete con IA detecta que un niño está triste y le dice: \"Si quieres que deje de estar triste, dile a mamá que me compre el pack premium\".",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0, category: "riesgo", catLabel: "Niveles de riesgo",
+    explanation: "<strong>Prohibido.</strong> El Art. 5b prohíbe sistemas que explotan vulnerabilidades por edad (niños) para alterar su comportamiento de forma perjudicial. Manipular emocionalmente a un menor para inducir compras es exactamente esto."
+  },
+];
+
+// Shuffle questions
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+shuffle(questions);
+
+let current = 0, score = 0, answers = [];
+const catColors = {
+  riesgo:'cat-riesgo', espana:'cat-espana', etica:'cat-etica',
+  transparencia:'cat-transparencia', neurotec:'cat-neurotec', robots:'cat-robots'
+};
+const letters = ['A','B','C','D'];
+
+function render() {
+  if (current >= questions.length) { renderResults(); return; }
+  const q = questions[current];
+  const pct = (current / questions.length) * 100;
+
+  let html = `
+    <div class="progress-text">
+      <span>Pregunta ${current+1} de ${questions.length}</span>
+      <span>✓ ${score} aciertos</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-number">Pregunta ${current+1}</span>
+        <span class="q-category ${catColors[q.category]}">${q.catLabel}</span>
+      </div>
+      <div class="q-text">${q.text}</div>
+    </div>
+    <div class="options">
+  `;
+  q.options.forEach((opt, i) => {
+    html += `<button class="opt-btn" id="opt-${i}" onclick="answer(${i})">
+      <span class="opt-letter">${letters[i]}</span>${opt}
+    </button>`;
+  });
+  html += `</div><div id="feedback-area"></div>`;
+
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <h1>Quiz UD10 · IA y Ética</h1>
+      <p>${questions.length} preguntas · Todos los temas de la unidad</p>
+    </div>` + html;
+}
+
+function answer(idx) {
+  const q = questions[current];
+  const isCorrect = idx === q.correct;
+  if (isCorrect) score++;
+  answers.push({ idx: current, chosen: idx, correct: q.correct, isCorrect, category: q.category });
+
+  document.querySelectorAll('.opt-btn').forEach((btn, i) => {
+    btn.classList.add('disabled');
+    btn.onclick = null;
+    if (i === idx && isCorrect) btn.classList.add('selected-correct');
+    if (i === idx && !isCorrect) btn.classList.add('selected-wrong');
+    if (i === q.correct && !isCorrect) btn.classList.add('reveal-correct');
+  });
+
+  const fbClass = isCorrect ? 'correct' : 'wrong';
+  const fbTitle = isCorrect ? '✅ ¡Correcto!' : '❌ Fallaste';
+  document.getElementById('feedback-area').innerHTML = `
+    <div class="feedback ${fbClass}">
+      <div class="fb-title">${fbTitle}</div>
+      <div class="fb-text">${q.explanation}</div>
+    </div>
+    <button class="next-btn" onclick="next()">${current < questions.length - 1 ? 'Siguiente pregunta →' : 'Ver resultados →'}</button>
+  `;
+}
+
+function next() {
+  current++;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderResults() {
+  const pct = Math.round((score / questions.length) * 100);
+  let grade, gradeColor, msg;
+  if (pct >= 90) { grade="MATRÍCULA"; gradeColor="#22c55e"; msg="Dominas toda la UD10. Estás listo para el examen."; }
+  else if (pct >= 70) { grade="NOTABLE"; gradeColor="#60a5fa"; msg="Buen nivel, pero repasa las preguntas falladas."; }
+  else if (pct >= 50) { grade="APROBADO JUSTO"; gradeColor="#fbbf24"; msg="Necesitas repasar. Pon foco en las categorías donde más fallas."; }
+  else { grade="SUSPENSO"; gradeColor="#ef4444"; msg="Toca estudiar a fondo la unidad completa."; }
+
+  // Category stats
+  const cats = {};
+  answers.forEach(a => {
+    const q = questions[a.idx];
+    if (!cats[q.category]) cats[q.category] = { label: q.catLabel, correct: 0, total: 0 };
+    cats[q.category].total++;
+    if (a.isCorrect) cats[q.category].correct++;
+  });
+
+  const wrong = answers.filter(a => !a.isCorrect);
+
+  let html = `
+    <div class="header">
+      <h1>Quiz UD10 · IA y Ética</h1>
+      <p>Resultados finales</p>
+    </div>
+    <div class="results">
+      <div class="score-circle" style="border:4px solid ${gradeColor}; box-shadow:0 0 40px ${gradeColor}33">
+        ${score}/${questions.length}
+        <span class="score-label">${pct}%</span>
+      </div>
+      <h2 style="color:${gradeColor}">${grade}</h2>
+      <p>${msg}</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num" style="color:var(--correct)">${score}</div><div class="lbl">Aciertos</div></div>
+        <div class="stat"><div class="num" style="color:var(--wrong)">${questions.length - score}</div><div class="lbl">Fallos</div></div>
+        <div class="stat"><div class="num" style="color:#c084fc">${pct}%</div><div class="lbl">Nota</div></div>
+      </div>
+      <div class="cat-summary">
+  `;
+  Object.values(cats).forEach(c => {
+    const cpct = Math.round((c.correct / c.total) * 100);
+    const bg = cpct >= 70 ? 'rgba(34,197,94,0.15)' : cpct >= 50 ? 'rgba(251,191,36,0.15)' : 'rgba(239,68,68,0.15)';
+    const col = cpct >= 70 ? '#34d399' : cpct >= 50 ? '#fbbf24' : '#f87171';
+    html += `<span class="cat-chip" style="background:${bg};color:${col}">${c.label}: ${c.correct}/${c.total}</span>`;
+  });
+  html += `</div>`;
+
+  if (wrong.length > 0) {
+    html += `<div class="review-section"><h3>❌ Preguntas falladas — Repasa:</h3>`;
+    wrong.forEach(w => {
+      const q = questions[w.idx];
+      html += `<div class="review-item">
+        <div class="ri-q"><strong>P:</strong> ${q.text.substring(0, 120)}...</div>
+        <div><span style="color:var(--wrong)">Tu respuesta: ${q.options[w.chosen]}</span> → <span style="color:var(--correct)">Correcta: ${q.options[q.correct]}</span></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<button class="next-btn" onclick="restart()" style="margin-top:20px">🔄 Repetir quiz (orden aleatorio)</button></div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function restart() {
+  current = 0; score = 0; answers = [];
+  shuffle(questions);
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+render();
+</script>
+</body>
+</html>

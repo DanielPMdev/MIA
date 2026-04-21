@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apuntes SSML · Alexa · Intenciones</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
+  h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .tab { padding: 8px 16px; border: 1px solid #d0d0c8; border-radius: 8px; font-size: 13px; cursor: pointer; background: #fff; color: #555; transition: all 0.15s; font-family: inherit; }
+  .tab:hover { background: #f0efe8; color: #1a1a1a; }
+  .tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; font-weight: 500; }
+  .section { display: none; }
+  .section.active { display: block; }
+  h2 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 0.5rem; }
+  h3 { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 0.5rem; }
+  p { font-size: 14px; color: #444; line-height: 1.7; margin-bottom: 0.75rem; }
+  .intro { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 1.25rem; padding: 12px 16px; background: #fff; border-radius: 10px; border: 1px solid #e0dfd8; }
+  .card { background: #fff; border: 1px solid #e0dfd8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700; margin-right: 8px; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-teal { background: #d1fae5; color: #065f46; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-coral { background: #fee2e2; color: #991b1b; }
+  .code-block { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; background: #1e1e2e; border-radius: 8px; padding: 12px 16px; margin: 10px 0; color: #cdd6f4; line-height: 1.9; }
+  .t-attr { color: #89b4fa; }
+  .t-val { color: #a6e3a1; }
+  .t-tag { color: #f38ba8; font-weight: 600; }
+  .t-comment { color: #6c7086; font-style: italic; }
+  .vals-row { font-size: 12px; color: #555; margin-top: 4px; }
+  .vals-row code { background: #f0efe8; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #333; }
+  .note-box { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 10px 0; font-size: 13px; color: #1e40af; line-height: 1.6; }
+  .warn-box { background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 10px 14px; margin: 10px 0; font-size: 13px; color: #78350f; line-height: 1.6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .mini-card { background: #f8f8f4; border-radius: 8px; padding: 10px 12px; }
+  .mini-label { font-size: 12px; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .mini-vals { font-size: 12px; color: #666; line-height: 1.5; }
+  hr { border: none; border-top: 1px solid #e8e7e0; margin: 1.5rem 0; }
+  .flow-grid { display: grid; grid-template-columns: 1fr 20px 1fr 20px 1fr 20px 1fr; gap: 4px; align-items: center; margin: 1rem 0 1.5rem; }
+  .flow-box { border-radius: 10px; padding: 12px 8px; text-align: center; }
+  .flow-box-label { font-size: 10px; font-weight: 600; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .flow-box-name { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
+  .flow-box-desc { font-size: 11px; line-height: 1.3; }
+  .flow-arrow { text-align: center; font-size: 16px; color: #aaa; font-weight: 300; }
+  .fb-blue { background: #dbeafe; }
+  .fb-blue .flow-box-label, .fb-blue .flow-box-desc { color: #1d4ed8; }
+  .fb-blue .flow-box-name { color: #1e3a8a; }
+  .fb-purple { background: #ede9fe; }
+  .fb-purple .flow-box-label, .fb-purple .flow-box-desc { color: #6d28d9; }
+  .fb-purple .flow-box-name { color: #4c1d95; }
+  .fb-teal { background: #d1fae5; }
+  .fb-teal .flow-box-label, .fb-teal .flow-box-desc { color: #059669; }
+  .fb-teal .flow-box-name { color: #064e3b; }
+  .fb-amber { background: #fef3c7; }
+  .fb-amber .flow-box-label, .fb-amber .flow-box-desc { color: #d97706; }
+  .fb-amber .flow-box-name { color: #78350f; }
+  .intent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .intent-table th { text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 600; color: #666; border-bottom: 1px solid #e8e7e0; background: #f8f8f4; }
+  .intent-table th:first-child { border-radius: 8px 0 0 0; }
+  .intent-table th:last-child { border-radius: 0 8px 0 0; }
+  .intent-table td { padding: 10px; border-bottom: 1px solid #f0efe8; vertical-align: top; color: #333; line-height: 1.5; }
+  .intent-table tr:last-child td { border-bottom: none; }
+  .slot-chip { display: inline-block; background: #ede9fe; color: #5b21b6; border-radius: 6px; padding: 2px 8px; font-size: 12px; margin: 2px 2px 2px 0; font-weight: 500; }
+  .intent-chip { display: inline-block; background: #d1fae5; color: #065f46; border-radius: 6px; padding: 3px 10px; font-size: 13px; font-weight: 600; }
+  .step-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+  .step-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #444; }
+  .step-num { background: #ede9fe; color: #5b21b6; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+  .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0efe8; }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-label { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+  .cost-sub { font-size: 12px; color: #777; margin-top: 2px; }
+  .cost-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+  .cb-blue { background: #dbeafe; color: #1d4ed8; }
+  .cb-teal { background: #d1fae5; color: #065f46; }
+  .cb-amber { background: #fef3c7; color: #92400e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>SSML · Alexa · Intenciones</h1>
+  <p class="subtitle">Apuntes para el examen — etiquetas de voz, componentes del asistente, intenciones y slots, Lambda y costes AWS.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showSection('ssml', this)">Etiquetas SSML</button>
+    <button class="tab" onclick="showSection('alexa', this)">Componentes Alexa</button>
+    <button class="tab" onclick="showSection('intents', this)">Intenciones y Slots</button>
+    <button class="tab" onclick="showSection('resto', this)">Lambda y Costes</button>
+  </div>
+
+  <!-- SSML -->
+  <div id="ssml" class="section active">
+    <div class="intro">SSML es un lenguaje de marcado para controlar cómo se sintetiza la voz. Todo el contenido va dentro de <code style="font-family:monospace;background:#f0efe8;padding:1px 6px;border-radius:4px;font-size:13px;color:#c0392b;">&lt;speak&gt;</code>. En el examen te dan la chuleta con etiquetas, atributos y valores — aquí aprendes para qué sirve cada una.</div>
+
+    <div class="card">
+      <h3><span class="badge badge-blue">1</span> &lt;break&gt; — Pausas</h3>
+      <p>Inserta una pausa en la voz. Tiene dos formas: por <strong>tiempo exacto</strong> o por <strong>intensidad</strong>.</p>
+      <div class="code-block">
+        &lt;<span class="t-tag">break</span> <span class="t-attr">time</span>=<span class="t-val">"5s"</span>/&gt; &nbsp;&nbsp;<span class="t-comment">← pausa de 5 segundos</span><br>
+        &lt;<span class="t-tag">break</span> <span class="t-attr">strength</span>=<span class="t-val">"strong"</span>/&gt; &nbsp;<span class="t-comment">← pausa larga sin tiempo fijo</span>
+      </div>
+      <p class="vals-row">Valores de strength: <code>none</code> · <code>x-weak</code> · <code>weak</code> · <code>medium</code> · <code>strong</code> · <code>x-strong</code></p>
+    </div>
+
+    <div class="card">
+      <h3><span class="badge badge-teal">2</span> &lt;lang&gt; — Cambio de idioma</h3>
+      <p>Hace que una palabra o frase se pronuncie en otro idioma, usando el motor de voz correspondiente.</p>
+      <div class="code-block">
+        El &lt;<span class="t-tag">lang</span> <span class="t-attr">xml:lang</span>=<span class="t-val">"en-US"</span>&gt;streamer&lt;/<span class="t-tag">lang</span>&gt; vasco...
+      </div>
+      <p class="vals-row">Valores comunes: <code>es-ES</code> · <code>es-MX</code> · <code>en-US</code> · <code>en-GB</code> · <code>fr-FR</code> · <code>de-DE</code></p>
+    </div>
+
+    <div class="card">
+      <h3><span class="badge badge-amber">3</span> &lt;emphasis&gt; — Énfasis</h3>
+      <p>Destaca una palabra o frase cambiando su entonación y ritmo. Solo tiene un atributo: <code style="font-family:monospace;background:#f0efe8;padding:1px 5px;border-radius:4px;">level</code>.</p>
+      <div class="code-block">
+        &lt;<span class="t-tag">emphasis</span> <span class="t-attr">level</span>=<span class="t-val">"strong"</span>&gt;las Campanadas&lt;/<span class="t-tag">emphasis</span>&gt;<br>
+        &lt;<span class="t-tag">emphasis</span> <span class="t-attr">level</span>=<span class="t-val">"reduced"</span>&gt;desvela quién&lt;/<span class="t-tag">emphasis</span>&gt;
+      </div>
+      <p class="vals-row">Valores: <code>strong</code> · <code>moderate</code> · <code>reduced</code></p>
+    </div>
+
+    <div class="card">
+      <h3><span class="badge badge-purple">4</span> &lt;p&gt; y &lt;s&gt; — Párrafo y sentencia</h3>
+      <p><code style="font-family:monospace;background:#f0efe8;padding:1px 5px;border-radius:4px;">&lt;p&gt;</code> introduce una pausa larga entre párrafos (como un punto y aparte). <code style="font-family:monospace;background:#f0efe8;padding:1px 5px;border-radius:4px;">&lt;s&gt;</code> introduce una pausa de sentencia (como un punto seguido más controlado).</p>
+      <div class="code-block">
+        &lt;<span class="t-tag">p</span>&gt;Primer párrafo.&lt;/<span class="t-tag">p</span>&gt;<br>
+        &lt;<span class="t-tag">p</span>&gt;&lt;<span class="t-tag">s</span>&gt;Una frase concreta.&lt;/<span class="t-tag">s</span>&gt;&lt;/<span class="t-tag">p</span>&gt;
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="badge badge-coral">5</span> &lt;prosody&gt; — Volumen, velocidad y tono</h3>
+      <p>La etiqueta más importante. Controla tres parámetros de la voz. Se pueden anidar para combinar efectos.</p>
+      <div class="code-block">
+        <span class="t-comment">Volumen:</span> &lt;<span class="t-tag">prosody</span> <span class="t-attr">volume</span>=<span class="t-val">"x-loud"</span>&gt;...&lt;/<span class="t-tag">prosody</span>&gt;<br>
+        <span class="t-comment">Velocidad:</span> &lt;<span class="t-tag">prosody</span> <span class="t-attr">rate</span>=<span class="t-val">"slow"</span>&gt;...&lt;/<span class="t-tag">prosody</span>&gt;<br>
+        <span class="t-comment">Tono:</span> &lt;<span class="t-tag">prosody</span> <span class="t-attr">pitch</span>=<span class="t-val">"x-high"</span>&gt;...&lt;/<span class="t-tag">prosody</span>&gt;<br>
+        <span class="t-comment">Duración:</span> &lt;<span class="t-tag">prosody</span> <span class="t-attr">duration</span>=<span class="t-val">"20s"</span>&gt;...&lt;/<span class="t-tag">prosody</span>&gt;
+      </div>
+      <div class="grid2">
+        <div class="mini-card">
+          <div class="mini-label">volume</div>
+          <div class="mini-vals">silent · x-soft · soft · medium · loud · x-loud · +3dB / -2dB</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">rate</div>
+          <div class="mini-vals">x-slow · slow · medium · fast · x-fast · 20% · 70%</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">pitch</div>
+          <div class="mini-vals">x-low · low · medium · high · x-high · -10% · +5%</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-label">duration</div>
+          <div class="mini-vals">20s · 500ms — fuerza la duración total del fragmento</div>
+        </div>
+      </div>
+      <div class="note-box">Anidación: puedes meter un &lt;prosody&gt; dentro de otro. El interior hereda el contexto del exterior y añade su propio modificador encima.</div>
+      <div class="code-block">
+        <span class="t-comment">Anidación doble (tono + velocidad):</span><br>
+        &lt;<span class="t-tag">prosody</span> <span class="t-attr">pitch</span>=<span class="t-val">"x-low"</span>&gt;<br>
+        &nbsp;&nbsp;texto normal con tono bajo<br>
+        &nbsp;&nbsp;&lt;<span class="t-tag">prosody</span> <span class="t-attr">rate</span>=<span class="t-val">"x-fast"</span>&gt;texto rápido Y con tono bajo&lt;/<span class="t-tag">prosody</span>&gt;<br>
+        &lt;/<span class="t-tag">prosody</span>&gt;
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="badge badge-blue">6</span> &lt;say-as&gt; — Interpretación especial</h3>
+      <p>Le dice al motor cómo debe interpretar el texto: como fecha, fracción, número, dirección, etc.</p>
+      <div class="code-block">
+        &lt;<span class="t-tag">say-as</span> <span class="t-attr">interpret-as</span>=<span class="t-val">"date"</span> <span class="t-attr">format</span>=<span class="t-val">"dmy"</span>&gt;11-05-1978&lt;/<span class="t-tag">say-as</span>&gt;<br>
+        &lt;<span class="t-tag">say-as</span> <span class="t-attr">interpret-as</span>=<span class="t-val">"fraction"</span>&gt;1/3&lt;/<span class="t-tag">say-as</span>&gt;<br>
+        &lt;<span class="t-tag">say-as</span> <span class="t-attr">interpret-as</span>=<span class="t-val">"cardinal"</span>&gt;42&lt;/<span class="t-tag">say-as</span>&gt;
+      </div>
+      <p class="vals-row" style="margin-bottom:6px;">interpret-as: <code>character</code> · <code>cardinal</code> · <code>ordinal</code> · <code>digits</code> · <code>fraction</code> · <code>unit</code> · <code>date</code> · <code>time</code> · <code>address</code> · <code>telephone</code></p>
+      <p class="vals-row">format (para date): <code>mdy</code> · <code>dmy</code> · <code>ymd</code> · <code>md</code> · <code>dm</code> · <code>d</code> · <code>m</code> · <code>y</code></p>
+    </div>
+
+    <div class="card">
+      <h3><span class="badge badge-teal">7</span> &lt;amazon:effect name="whispered"&gt; — Susurro</h3>
+      <p>Exclusivo de Alexa/Amazon Polly. Hace que el texto se pronuncie en modo susurro.</p>
+      <div class="code-block">
+        &lt;<span class="t-tag">amazon:effect</span> <span class="t-attr">name</span>=<span class="t-val">"whispered"</span>&gt;texto en susurro&lt;/<span class="t-tag">amazon:effect</span>&gt;
+      </div>
+    </div>
+  </div>
+
+  <!-- ALEXA -->
+  <div id="alexa" class="section">
+    <div class="intro">Cuando hablas con Alexa, tu voz pasa por cuatro componentes en cadena. Cada uno transforma la información de una forma distinta.</div>
+
+    <div class="flow-grid">
+      <div class="flow-box fb-blue">
+        <div class="flow-box-label">Entrada: VOZ</div>
+        <div class="flow-box-name">ASR</div>
+        <div class="flow-box-desc">Voz → Texto</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-box fb-purple">
+        <div class="flow-box-label">Entrada: TEXTO</div>
+        <div class="flow-box-name">NLU</div>
+        <div class="flow-box-desc">Texto → Intención + Slots</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-box fb-teal">
+        <div class="flow-box-label">Entrada: CONTEXTO</div>
+        <div class="flow-box-name">DM</div>
+        <div class="flow-box-desc">Decide acción o pregunta</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-box fb-amber">
+        <div class="flow-box-label">Entrada: TEXTO</div>
+        <div class="flow-box-name">TTS</div>
+        <div class="flow-box-desc">Texto → Voz</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ASR — Automatic Speech Recognition <span style="background:#dbeafe;color:#1d4ed8;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;margin-left:4px;">El oído</span></h3>
+      <p>Recibe las ondas de sonido de tu voz y las convierte en texto escrito. Sin ASR, el bot solo escucharía ruido.</p>
+      <p style="font-size:13px;"><strong>Entrada:</strong> Señal de audio &nbsp;|&nbsp; <strong>Salida:</strong> Texto transcrito</p>
+      <div class="note-box">Ejemplo: dices "¿Qué tiempo hace en Valencia?" → el ASR escribe exactamente eso.</div>
+    </div>
+
+    <div class="card">
+      <h3>NLU — Natural Language Understanding <span style="background:#ede9fe;color:#5b21b6;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;margin-left:4px;">El cerebro</span></h3>
+      <p>Toma el texto y extrae dos cosas fundamentales: la <strong>intención</strong> (qué quiere el usuario) y las <strong>entidades / slots</strong> (datos concretos que necesita).</p>
+      <p style="font-size:13px;"><strong>Entrada:</strong> Texto &nbsp;|&nbsp; <strong>Salida:</strong> Intención + Slots</p>
+      <div class="note-box">Ejemplo: "¿Qué tiempo hace en Valencia?" → Intención: <em>Consultar_clima</em> · Slot ciudad: <em>Valencia</em> · Slot fecha: <em>Ahora</em></div>
+    </div>
+
+    <div class="card">
+      <h3>DM — Dialog Manager <span style="background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;margin-left:4px;">El estratega</span></h3>
+      <p>Decide qué hacer con la intención detectada. Si faltan slots, pregunta al usuario (<strong>Elicit Slot</strong>). Si tiene todo, ejecuta la acción (<strong>Fulfillment</strong>). Gestiona el flujo de la conversación.</p>
+      <p style="font-size:13px;"><strong>Entrada:</strong> Contexto (intención + slots) &nbsp;|&nbsp; <strong>Salida:</strong> Acción o pregunta</p>
+      <div class="note-box">Ejemplo: tiene "Consultar_clima" y "Valencia" → busca los datos meteorológicos y genera el texto de respuesta.</div>
+    </div>
+
+    <div class="card">
+      <h3>TTS — Text-to-Speech <span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;margin-left:4px;">La garganta artificial</span></h3>
+      <p>Convierte el texto de respuesta generado por el DM en voz sintetizada usando voces grabadas o de IA. Aquí es donde entra SSML.</p>
+      <p style="font-size:13px;"><strong>Entrada:</strong> Texto &nbsp;|&nbsp; <strong>Salida:</strong> Voz</p>
+      <div class="note-box">Ejemplo: "En Valencia hace 22 grados y está soleado" → lo dice en voz alta con la voz de Alexa.</div>
+    </div>
+
+    <hr>
+    <div class="grid2" style="margin-bottom:1rem;">
+      <div class="card" style="margin-bottom:0;">
+        <h3 style="margin-bottom:6px;">Elicit Slot</h3>
+        <p>El bot detecta la intención pero le falta un slot obligatorio. Le pregunta al usuario para completarlo.</p>
+        <div class="warn-box">"¿Para qué ciudad quieres el tiempo?" → le falta el slot Ciudad.</div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <h3 style="margin-bottom:6px;">Fulfillment</h3>
+        <p>El bot tiene todos los slots que necesita y ejecuta la acción: llama a una API, hace la reserva, etc.</p>
+        <div class="note-box">Tiene Ciudad:Valencia → llama a la API del tiempo → responde con los datos.</div>
+      </div>
+    </div>
+
+    <hr>
+    <h3 style="margin-bottom:1rem;">Tres ejemplos del flujo completo</h3>
+    <div class="card" style="margin-bottom:8px;">
+      <p style="font-family:monospace;font-size:13px;color:#1a1a1a;margin-bottom:6px;font-weight:600;">"¿Qué tiempo hace en Valencia?"</p>
+      <p style="font-size:13px;">ASR → texto · NLU → Consultar_clima + Ciudad:Valencia + Fecha:Ahora · DM → llama a API del tiempo · TTS → "Hacen 20° y está soleado"</p>
+    </div>
+    <div class="card" style="margin-bottom:8px;">
+      <p style="font-family:monospace;font-size:13px;color:#1a1a1a;margin-bottom:6px;font-weight:600;">"¿Cuáles son las noticias del día?"</p>
+      <p style="font-size:13px;">ASR → texto · NLU → Obtener_noticias + Fecha:Hoy · DM → busca noticias o pregunta por temas · TTS → lee los titulares</p>
+    </div>
+    <div class="card">
+      <p style="font-family:monospace;font-size:13px;color:#1a1a1a;margin-bottom:6px;font-weight:600;">"Pon una alarma para las 7 de la mañana"</p>
+      <p style="font-size:13px;">ASR → texto · NLU → Crear_alarma + Hora:07:00 · DM → crea alarma, pregunta si repetir · TTS → "Alarma programada para las 7"</p>
+    </div>
+  </div>
+
+  <!-- INTENCIONES -->
+  <div id="intents" class="section">
+    <div class="intro">La <strong>intención (intent)</strong> es el objetivo del usuario. Los <strong>slots</strong> son las variables concretas que necesitas para cumplirlo. Es como una función: la intención es el nombre, los slots son los parámetros.</div>
+
+    <div class="warn-box" style="margin-bottom:1rem;">Truco de examen: la intención responde a "¿qué quiere hacer?" · los slots responden a "¿con qué datos?"</div>
+
+    <div class="card" style="padding: 0; overflow:hidden;">
+      <table class="intent-table">
+        <thead>
+          <tr>
+            <th style="width:38%;">Frase del usuario</th>
+            <th style="width:22%;">Intención</th>
+            <th>Slots</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"Quiero reservar una mesa para cuatro personas mañana a las dos."</td>
+            <td><span class="intent-chip">Hacer_Reserva</span></td>
+            <td>
+              <span class="slot-chip">Personas: 4</span>
+              <span class="slot-chip">Fecha: mañana</span>
+              <span class="slot-chip">Hora: 14:00</span>
+            </td>
+          </tr>
+          <tr>
+            <td>"¿Tenéis sitio para cenar hoy a las nueve?"</td>
+            <td><span class="intent-chip">Consultar_Disponibilidad</span></td>
+            <td>
+              <span class="slot-chip">Fecha: hoy</span>
+              <span class="slot-chip">Hora: 21:00</span>
+              <span class="slot-chip">Tipo: cena</span>
+            </td>
+          </tr>
+          <tr>
+            <td>"Me gustaría cancelar mi reserva del viernes."</td>
+            <td><span class="intent-chip">Cancelar_Reserva</span></td>
+            <td>
+              <span class="slot-chip">Fecha: viernes</span>
+            </td>
+          </tr>
+          <tr>
+            <td>"Cambia mi reserva de las 8 por una a las 10 de la noche."</td>
+            <td><span class="intent-chip">Modificar_Reserva</span></td>
+            <td>
+              <span class="slot-chip">Hora_original: 20:00</span>
+              <span class="slot-chip">Hora_nueva: 22:00</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+    <h3 style="margin-bottom:0.75rem;">Elicit Slot vs Fulfillment</h3>
+    <div class="grid2">
+      <div class="card">
+        <h3 style="margin-bottom:6px;">Elicit Slot</h3>
+        <p>El bot detecta la intención pero le falta un slot obligatorio. Le pregunta al usuario para completarlo.</p>
+        <div class="warn-box" style="margin-top:8px;">"¿Para qué ciudad quieres el tiempo?" → le falta el slot Ciudad.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:6px;">Fulfillment</h3>
+        <p>El bot tiene todos los slots que necesita y ejecuta la acción: llama a una API, hace la reserva, etc.</p>
+        <div class="note-box" style="margin-top:8px;">Tiene Ciudad:Valencia → llama a la API del tiempo → responde con los datos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESTO -->
+  <div id="resto" class="section">
+    <div class="intro">Cuando el bot tiene la intención y todos los slots, necesita conectarse al mundo real para obtener o guardar datos. Eso lo hace una función AWS Lambda.</div>
+
+    <div class="card">
+      <h3 style="margin-bottom:10px;">Flujo técnico — bot del tiempo</h3>
+      <div class="step-list">
+        <div class="step-item"><span class="step-num">1</span><span>NLU (Lex) detecta la intención <em>Consultar_Clima</em> + Ciudad: Valencia</span></div>
+        <div class="step-item"><span class="step-num">2</span><span>Lex envía un archivo JSON con esos datos a la función Lambda</span></div>
+        <div class="step-item"><span class="step-num">3</span><span>Lambda llama a la API de meteorología y obtiene "22°C y soleado"</span></div>
+        <div class="step-item"><span class="step-num">4</span><span>TTS (Polly) convierte la respuesta en voz para el usuario</span></div>
+      </div>
+    </div>
+
+    <hr>
+    <h3 style="margin-bottom:0.75rem;">Costes AWS — modelo de facturación</h3>
+    <div class="card">
+      <div class="cost-row">
+        <div>
+          <div class="cost-label">Amazon Lex</div>
+          <div class="cost-sub">Se paga por utterance — cada vez que el usuario habla al bot</div>
+        </div>
+        <span class="cost-badge cb-blue">$0,004 / solicitud</span>
+      </div>
+      <div class="cost-row">
+        <div>
+          <div class="cost-label">Amazon Polly (TTS)</div>
+          <div class="cost-sub">Se paga por caracteres convertidos a voz</div>
+        </div>
+        <span class="cost-badge cb-teal">$4,00 / millón chars</span>
+      </div>
+      <div class="cost-row">
+        <div>
+          <div class="cost-label">Amazon Transcribe (ASR)</div>
+          <div class="cost-sub">Se paga por minutos de audio procesados</div>
+        </div>
+        <span class="cost-badge cb-amber">$0,024 / minuto</span>
+      </div>
+    </div>
+
+    <div class="note-box">Ejemplo del examen: 1.000 solicitudes → Lex $4,00 · 200.000 chars → Polly $0,80 · 100 min audio → Transcribe $2,40 = <strong>Total: $7,20/mes</strong></div>
+  </div>
+</div>
+
+<script>
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

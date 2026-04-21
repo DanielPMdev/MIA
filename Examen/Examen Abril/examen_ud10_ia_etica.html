@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen UD10 — IA y Ética</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#0f0a1e; --card:#1a1333; --card-border:#2d2450; --text:#f0eef5; --text-dim:#9890b0; --correct:#22c55e; --wrong:#ef4444; --accent:#8b5cf6; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 0%,rgba(139,92,246,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(59,130,246,.08) 0%,transparent 50%)}
+.app{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:20px}
+.header{text-align:center;padding:30px 0 10px}
+.header h1{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;background:linear-gradient(135deg,#c084fc,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--text-dim);font-size:.85rem;margin-top:6px}
+.progress-bar{width:100%;height:8px;background:#2d2450;border-radius:99px;margin:14px 0;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#8b5cf6,#60a5fa);border-radius:99px;transition:width .5s}
+.progress-text{display:flex;justify-content:space-between;font-size:.76rem;color:var(--text-dim);margin-bottom:4px}
+.question-card{background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:22px;margin-bottom:14px;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.q-number{font-size:.7rem;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
+.q-cat{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.c-r{background:rgba(239,68,68,.15);color:#f87171}.c-e{background:rgba(251,191,36,.15);color:#fbbf24}.c-t{background:rgba(96,165,250,.15);color:#60a5fa}.c-n{background:rgba(192,132,252,.15);color:#c084fc}.c-b{background:rgba(251,146,60,.15);color:#fb923c}.c-v{background:rgba(52,211,153,.15);color:#34d399}
+.q-text{font-size:.98rem;font-weight:500;line-height:1.6}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.opt-btn{border:2px solid var(--card-border);background:rgba(45,36,80,.5);border-radius:13px;padding:13px 14px;font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;color:var(--text);cursor:pointer;transition:all .25s;text-align:left;line-height:1.4}
+.opt-btn:hover:not(.disabled){border-color:#8b5cf6;background:rgba(139,92,246,.1);transform:translateY(-2px)}
+.opt-btn .L{display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(139,92,246,.2);text-align:center;line-height:22px;font-size:.68rem;font-weight:800;margin-right:7px;color:#c084fc;vertical-align:middle}
+.opt-btn.sc{border-color:var(--correct);background:rgba(34,197,94,.12);animation:pop .4s}
+.opt-btn.sw{border-color:var(--wrong);background:rgba(239,68,68,.12);animation:shake .4s}
+.opt-btn.rc{border-color:var(--correct);background:rgba(34,197,94,.08)}
+.opt-btn.disabled{cursor:default;opacity:.4}
+.opt-btn.disabled.sc,.opt-btn.disabled.rc{opacity:1}
+.opt-btn.disabled.sw{opacity:.7}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.fb{border-radius:13px;padding:16px;margin-top:12px;animation:fadeIn .3s;line-height:1.55}
+.fb.fc{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)}
+.fb.fw{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25)}
+.fb .ft{font-weight:800;font-size:.95rem;margin-bottom:5px}
+.fb.fc .ft{color:var(--correct)}.fb.fw .ft{color:var(--wrong)}
+.fb .fx{font-size:.82rem;color:var(--text-dim)}.fb .fx strong{color:var(--text)}
+.nb{display:block;width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;border-radius:13px;color:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .25s}
+.nb:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(139,92,246,.3)}
+.results{text-align:center;padding:30px 10px;animation:fadeIn .5s}
+.sc-c{width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 18px;font-size:2.2rem;font-weight:800;font-family:'Playfair Display',serif}
+.sc-l{font-size:.72rem;font-weight:500;color:var(--text-dim)}
+.results h2{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:6px}
+.results>p{color:var(--text-dim);font-size:.84rem;margin-bottom:22px;max-width:480px;margin-left:auto;margin-right:auto}
+.sr{display:flex;justify-content:center;gap:22px;margin-bottom:22px}
+.st{text-align:center}.st .sn{font-size:1.3rem;font-weight:800}.st .sl{font-size:.66rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em}
+.cs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:20px}
+.cc{padding:4px 11px;border-radius:99px;font-size:.7rem;font-weight:700}
+.rs{text-align:left;margin-top:14px}.rs h3{margin-bottom:10px;font-size:.78rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em}
+.ri{background:var(--card);border:1px solid var(--card-border);border-radius:11px;padding:12px;margin-bottom:7px;font-size:.78rem;line-height:1.45}
+.ri .rq{color:var(--text-dim);margin-bottom:3px}.ri strong{color:var(--text)}
+@media(max-width:600px){.options{grid-template-columns:1fr}.header h1{font-size:1.3rem}.q-text{font-size:.9rem}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const Q=[
+// ── NIVELES DE RIESGO (mix directo + matiz) ──
+{t:"¿Qué artículo del Reglamento UE 2024/1689 regula las prácticas de IA prohibidas (riesgo inaceptable)?",o:["Artículo 5","Artículo 10","Artículo 50","Artículo 69"],c:0,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Artículo 5.</strong> Recoge todas las prácticas prohibidas: manipulación subliminal, explotación de vulnerabilidades, social scoring, identificación biométrica remota en tiempo real y reconocimiento de emociones en educación y trabajo."},
+
+{t:"Un sistema de IA se usa para evaluar la solvencia crediticia de personas físicas y decidir si concederles un préstamo. ¿Qué nivel de riesgo tiene?",o:["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],c:1,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Riesgo alto.</strong> La calificación crediticia de personas físicas está en el Anexo III como alto riesgo, ya que puede causar exclusión financiera y discriminación."},
+
+{t:"¿Cuál de los siguientes es un ejemplo de sistema de IA de riesgo mínimo?",o:["IA que evalúa exámenes universitarios","Filtro de spam de correo electrónico","Sistema de triaje en urgencias","Chatbot de atención al cliente"],c:1,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Filtro de spam.</strong> Es el ejemplo clásico de riesgo mínimo: no afecta a derechos fundamentales ni toma decisiones críticas. El chatbot es riesgo limitado (transparencia), la evaluación de exámenes y el triaje son alto riesgo."},
+
+{t:"Un sistema de IA en un centro educativo analiza las expresiones faciales de los alumnos para detectar si están aburridos. ¿Qué nivel de riesgo?",o:["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],c:0,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Prohibido.</strong> El reconocimiento de emociones en centros educativos está expresamente prohibido (Art. 5). No importa el fin: detectar aburrimiento, atención o cualquier emoción en un colegio = prohibido."},
+
+{t:"¿Cuál de estos ámbitos NO aparece en el Anexo III como sistema de alto riesgo?",o:["Educación y formación profesional","Empleo y selección de personal","Videojuegos con IA","Infraestructuras críticas"],c:2,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Videojuegos con IA.</strong> Los videojuegos son riesgo mínimo. El Anexo III incluye: biometría, infraestructuras críticas, educación, empleo, servicios públicos, justicia, migración, etc."},
+
+{t:"Un sistema de IA vigila el comportamiento de estudiantes durante un examen para detectar si copian, analizando movimientos de cabeza. ¿Qué nivel?",o:["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],c:1,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Riesgo alto</strong> (Anexo III.3d). Detectar <em>comportamientos</em> (copiar) durante exámenes = alto riesgo. Si analizara <em>emociones</em> (nerviosismo, estrés) = prohibido. La diferencia entre comportamiento y emoción es clave."},
+
+{t:"¿Qué requisito deben cumplir los datos de entrenamiento de un sistema de IA de alto riesgo según el Art. 10?",o:["Ser gratuitos y de código abierto","Ser representativos, pertinentes y estar libres de sesgos","Proceder exclusivamente de fuentes gubernamentales","Estar en formato XML obligatoriamente"],c:1,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>Representativos, pertinentes y sin sesgos.</strong> El Art. 10 exige gobernanza de datos: los conjuntos deben ser completos, representativos y mitigar sesgos que puedan causar discriminación."},
+
+// ── TRANSPARENCIA ──
+{t:"Según el Art. 50, ¿qué obligación tiene un chatbot de atención al cliente?",o:["Resolver todas las consultas correctamente","Informar al usuario de que está interactuando con una IA","Almacenar todas las conversaciones durante 10 años","Ofrecer siempre la opción de hablar con un humano"],c:1,cat:"t",cl:"Transparencia",
+x:"<strong>Informar de que es una IA.</strong> Los sistemas que interactúan con personas deben informar al usuario de que habla con una máquina, para que pueda tomar una decisión informada."},
+
+{t:"Si una empresa crea un vídeo hiperrealista con IA de un político diciendo algo que nunca dijo (deepfake), ¿qué debe hacer obligatoriamente?",o:["Destruir el vídeo inmediatamente","Revelar públicamente que es contenido generado artificialmente","Pedir permiso al político antes de publicarlo","Nada, los deepfakes no están regulados"],c:1,cat:"t",cl:"Transparencia",
+x:"<strong>Revelar que es artificial.</strong> El Art. 50 obliga a hacer público que el contenido (ultrafalsificación) ha sido generado de forma artificial. La tecnología en sí no está prohibida, pero sí hay obligación de transparencia."},
+
+{t:"Los proveedores de IA que generen contenido sintético (audio, imagen, vídeo, texto) deben marcarlo en un formato legible por máquina. ¿Verdadero o falso?",o:["Verdadero","Falso","Solo si es contenido de vídeo","Solo si el contenido es comercial"],c:0,cat:"t",cl:"Transparencia",
+x:"<strong>Verdadero.</strong> El Art. 50 obliga a marcar todo contenido sintético (audio, imagen, vídeo y texto) en formato legible por máquina para que pueda detectarse que fue generado artificialmente."},
+
+// ── MARCO ESPAÑOL ──
+{t:"¿Qué es la ENIA?",o:["Agencia Europea de Normalización de IA","Estrategia Nacional de Inteligencia Artificial","Entidad Nacional de Inspección de Algoritmos","Escuela Nacional de Ingeniería Avanzada"],c:1,cat:"e",cl:"Marco español",
+x:"<strong>Estrategia Nacional de Inteligencia Artificial.</strong> Forma parte de España Digital 2025. Su objetivo es un marco de referencia para una IA inclusiva, sostenible y centrada en la ciudadanía."},
+
+{t:"¿Dónde tiene su sede la AESIA (Agencia Española de Supervisión de Inteligencia Artificial)?",o:["Madrid","Barcelona","Sevilla","A Coruña"],c:3,cat:"e",cl:"Marco español",
+x:"<strong>A Coruña.</strong> En diciembre de 2022 se estableció que la sede física de la AESIA estaría en A Coruña. Está adscrita a la Secretaría de Estado de Digitalización e Inteligencia Artificial."},
+
+{t:"¿Qué es un sandbox regulatorio en el contexto de la IA?",o:["Un videojuego de simulación de leyes","Un entorno controlado para probar sistemas de IA antes de su lanzamiento","Una base de datos de infracciones de IA","Un certificado de conformidad europeo"],c:1,cat:"e",cl:"Marco español",
+x:"<strong>Entorno controlado de pruebas.</strong> Permite a empresas (especialmente pymes y startups) probar sus sistemas de IA bajo supervisión de la AESIA, verificando que cumplen la normativa antes de salir al mercado."},
+
+{t:"El Sello de IA Confiable previsto en España Digital 2026 es de carácter:",o:["Obligatorio para todo sistema de IA","Obligatorio solo para alto riesgo","Voluntario, para productos que no sean de alto riesgo","Exclusivo para administraciones públicas"],c:2,cat:"e",cl:"Marco español",
+x:"<strong>Voluntario.</strong> Es una certificación voluntaria para productos y servicios de IA que no sean de alto riesgo, compatible con el marco regulatorio europeo."},
+
+{t:"¿Qué organismo estudia el impacto social, laboral y ético de los algoritmos en España?",o:["AESIA","OBISAL","ENIA","Spain Neurotech"],c:1,cat:"e",cl:"Marco español",
+x:"<strong>OBISAL</strong> — Observatorio del impacto Social y ético de los Algoritmos. Genera recomendaciones y buenas prácticas sobre el impacto ético de los sistemas con IA."},
+
+{t:"¿Cuál de estas opciones forma parte de España Digital 2025 pero NO de España Digital 2026?",o:["AESIA","Consejo Asesor de Inteligencia Artificial","OBISAL","Sello IA Confiable"],c:1,cat:"e",cl:"Marco español",
+x:"<strong>Consejo Asesor de IA.</strong> Junto con la ENIA y la Carta de Derechos Digitales, pertenecen a España Digital 2025. La AESIA, OBISAL y el Sello IA Confiable se añaden en España Digital 2026."},
+
+// ── CARTA DE DERECHOS DIGITALES ──
+{t:"Según el Art. XXV de la Carta de Derechos Digitales, la IA debe asegurar un enfoque centrado en:",o:["La eficiencia económica","La persona y su dignidad inalienable","La competitividad tecnológica europea","La automatización total de procesos"],c:1,cat:"e",cl:"Marco español",
+x:"<strong>La persona y su dignidad.</strong> El Art. XXV establece que la IA debe perseguir el bien común, asegurar la no maleficencia, garantizar la no discriminación, la transparencia, la auditabilidad y la supervisión humana."},
+
+// ── NEUROTECNOLOGÍA ──
+{t:"¿Dónde tiene su sede Spain Neurotech (Centro Nacional de Neurotecnología)?",o:["Universidad de Barcelona","Universidad Autónoma de Madrid","Universidad Politécnica de Valencia","CSIC en Sevilla"],c:1,cat:"n",cl:"Neurotecnología",
+x:"<strong>Universidad Autónoma de Madrid.</strong> Spain Neurotech fue creado en diciembre de 2022 y tiene entre sus objetivos avanzar en el conocimiento del cerebro y desarrollar reglas éticas para las neurotecnologías."},
+
+{t:"Según el Art. XXVI de la Carta de Derechos Digitales, ¿qué debe garantizarse respecto a los datos cerebrales obtenidos por neurotecnologías?",o:["Que se compartan con la comunidad científica internacional","La confidencialidad, seguridad y pleno dominio del usuario sobre ellos","Que se almacenen en servidores europeos exclusivamente","Que se destruyan tras cada uso"],c:1,cat:"n",cl:"Neurotecnología",
+x:"<strong>Confidencialidad y pleno dominio del usuario.</strong> El Art. XXVI protege la identidad individual, la autodeterminación, la privacidad de los datos neuronales y evita intromisiones en las conexiones cerebrales."},
+
+// ── LEYES DE ASIMOV ──
+{t:"¿Cuál es la Primera Ley de la Robótica de Isaac Asimov?",o:["Los robots protegerán su propia existencia","Los robots cumplirán las órdenes de los humanos","Los robots no podrán hacer daño a los seres humanos","Los robots deben ser transparentes en sus decisiones"],c:2,cat:"b",cl:"Ética y robótica",
+x:"<strong>No hacer daño a humanos.</strong> 1ª Ley: no dañar humanos. 2ª Ley: obedecer órdenes (salvo conflicto con la 1ª). 3ª Ley: proteger su existencia (salvo conflicto con 1ª y 2ª). Aparecieron en \"Círculo Vicioso\" (Runaround, 1942)."},
+
+{t:"¿En qué obra y año formuló Asimov sus tres leyes de la robótica por primera vez?",o:["Yo, Robot (1950)","Círculo Vicioso / Runaround (1942)","Fundación (1951)","El hombre bicentenario (1976)"],c:1,cat:"b",cl:"Ética y robótica",
+x:"<strong>Círculo Vicioso (Runaround), 1942.</strong> Aunque \"Yo, Robot\" (1950) las popularizó, las tres leyes aparecieron por primera vez en el relato \"Runaround\" de 1942."},
+
+// ── PRINCIPIOS ÉTICOS UE ROBÓTICA ──
+{t:"¿Cuál de estos es un principio ético del Parlamento Europeo para robots?",o:["Los robots deben pagar impuestos","Respetar el rechazo de una persona a ser cuidada por un robot","Los robots deben tener nacionalidad","Los robots deben ser de código abierto"],c:1,cat:"b",cl:"Ética y robótica",
+x:"<strong>Respetar el rechazo al robot.</strong> El PE establece 8 principios: dignidad humana, respetar el rechazo al robot, libertad, privacidad, protección ante manipulación, lazos sociales, igualdad de acceso y regulación del transhumanismo."},
+
+// ── VEHÍCULOS AUTÓNOMOS ──
+{t:"El dilema ético de un coche autónomo que debe elegir entre atropellar a un peatón o poner en peligro al pasajero se conoce como:",o:["Paradoja de Turing","Test de Voight-Kampff","Dilema del trolley / Moral Machine","Problema del marco (Frame Problem)"],c:2,cat:"v",cl:"Vehículos autónomos",
+x:"<strong>Dilema del trolley / Moral Machine.</strong> Es el dilema clásico: ¿a quién protege la máquina cuando el daño es inevitable? El proyecto Moral Machine del MIT estudió las preferencias morales de millones de personas."},
+
+// ── SANCIONES ──
+{t:"Según el Anteproyecto de Ley español, las infracciones MUY GRAVES por usar sistemas de IA prohibidos pueden conllevar multas de hasta:",o:["500.000 €","7.500.000 €","15.000.000 €","35.000.000 € (o 7% del volumen de negocio mundial)"],c:3,cat:"e",cl:"Marco español",
+x:"<strong>Hasta 35M € (o 2-7% del volumen de negocio).</strong> Las prácticas prohibidas tienen las sanciones más altas. Las infracciones en alto riesgo van hasta 15M € (2-3%), las graves hasta 7,5M € y las leves hasta 500.000 €."},
+
+// ── REGLAMENTO GENERAL ──
+{t:"La Ley de IA de la UE (Reglamento 2024/1689) es considerada:",o:["Una directiva no vinculante","El primer marco jurídico integral sobre IA en el mundo","Una recomendación del Consejo de Europa","Un tratado bilateral UE-EEUU"],c:1,cat:"r",cl:"Niveles de riesgo",
+x:"<strong>El primer marco jurídico integral sobre IA en el mundo.</strong> Fue aprobado en junio de 2024 y establece un enfoque basado en riesgos para regular la IA en toda la Unión Europea."},
+
+{t:"¿Dónde se ubica el primer Centro Europeo para la Transparencia Algorítmica (ECAT)?",o:["Bruselas","Berlín","Sevilla","Ámsterdam"],c:2,cat:"e",cl:"Marco español",
+x:"<strong>Sevilla.</strong> El ECAT está en el Joint Research Center (JRC) del Parque Científico Tecnológico Cartuja. Es el primer centro europeo dedicado a la transparencia algorítmica."},
+];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+shuffle(Q);
+let cur=0,sc=0,ans=[];
+const cc={r:'c-r',e:'c-e',t:'c-t',n:'c-n',b:'c-b',v:'c-v'};
+const L=['A','B','C','D'];
+
+function render(){
+if(cur>=Q.length){renderResults();return}
+const q=Q[cur],pct=(cur/Q.length)*100;
+let h=`<div class="header"><h1>Examen UD10 · IA y Ética</h1><p>${Q.length} preguntas · Simulación de examen real</p></div>
+<div class="progress-text"><span>Pregunta ${cur+1} de ${Q.length}</span><span>✓ ${sc}</span></div>
+<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+<div class="question-card"><div class="q-meta"><span class="q-number">Pregunta ${cur+1}</span><span class="q-cat ${cc[q.cat]}">${q.cl}</span></div><div class="q-text">${q.t}</div></div>
+<div class="options">`;
+q.o.forEach((o,i)=>{h+=`<button class="opt-btn" id="o${i}" onclick="answer(${i})"><span class="L">${L[i]}</span>${o}</button>`});
+h+=`</div><div id="fba"></div>`;
+document.getElementById('app').innerHTML=h}
+
+function answer(i){
+const q=Q[cur],ok=i===q.c;if(ok)sc++;
+ans.push({idx:cur,ch:i,co:q.c,ok,cat:q.cat});
+document.querySelectorAll('.opt-btn').forEach((b,j)=>{b.classList.add('disabled');b.onclick=null;if(j===i&&ok)b.classList.add('sc');if(j===i&&!ok)b.classList.add('sw');if(j===q.c&&!ok)b.classList.add('rc')});
+document.getElementById('fba').innerHTML=`<div class="fb ${ok?'fc':'fw'}"><div class="ft">${ok?'✅ ¡Correcto!':'❌ Fallaste'}</div><div class="fx">${q.x}</div></div><button class="nb" onclick="next()">${cur<Q.length-1?'Siguiente →':'Ver resultados →'}</button>`}
+
+function next(){cur++;render();window.scrollTo({top:0,behavior:'smooth'})}
+
+function renderResults(){
+const pct=Math.round((sc/Q.length)*100);
+let g,gc,m;
+if(pct>=90){g="MATRÍCULA";gc="#22c55e";m="Excelente dominio de la UD10. Preparado para el examen."}
+else if(pct>=70){g="NOTABLE";gc="#60a5fa";m="Buen nivel. Repasa las falladas y estarás listo."}
+else if(pct>=50){g="APROBADO JUSTO";gc="#fbbf24";m="Necesitas repasar. Fíjate en las categorías donde fallas."}
+else{g="SUSPENSO";gc="#ef4444";m="Toca estudiar la unidad en profundidad."}
+const cats={};
+ans.forEach(a=>{const q=Q[a.idx];if(!cats[q.cat])cats[q.cat]={l:q.cl,c:0,t:0};cats[q.cat].t++;if(a.ok)cats[q.cat].c++});
+const wr=ans.filter(a=>!a.ok);
+let h=`<div class="header"><h1>Examen UD10 · Resultados</h1></div><div class="results">
+<div class="sc-c" style="border:4px solid ${gc};box-shadow:0 0 40px ${gc}33">${sc}/${Q.length}<span class="sc-l">${pct}%</span></div>
+<h2 style="color:${gc}">${g}</h2><p>${m}</p>
+<div class="sr"><div class="st"><div class="sn" style="color:var(--correct)">${sc}</div><div class="sl">Aciertos</div></div><div class="st"><div class="sn" style="color:var(--wrong)">${Q.length-sc}</div><div class="sl">Fallos</div></div><div class="st"><div class="sn" style="color:#c084fc">${pct}%</div><div class="sl">Nota</div></div></div>
+<div class="cs">`;
+Object.values(cats).forEach(c=>{const p=Math.round((c.c/c.t)*100);const bg=p>=70?'rgba(34,197,94,.15)':p>=50?'rgba(251,191,36,.15)':'rgba(239,68,68,.15)';const cl=p>=70?'#34d399':p>=50?'#fbbf24':'#f87171';h+=`<span class="cc" style="background:${bg};color:${cl}">${c.l}: ${c.c}/${c.t}</span>`});
+h+=`</div>`;
+if(wr.length>0){h+=`<div class="rs"><h3>❌ Repasa estas:</h3>`;wr.forEach(w=>{const q=Q[w.idx];h+=`<div class="ri"><div class="rq"><strong>P:</strong> ${q.t.substring(0,110)}...</div><span style="color:var(--wrong)">Respondiste: ${q.o[w.ch]}</span> → <span style="color:var(--correct)">Correcta: ${q.o[q.co]}</span></div>`});h+=`</div>`}
+h+=`<button class="nb" onclick="restart()" style="margin-top:18px">🔄 Repetir examen</button></div>`;
+document.getElementById('app').innerHTML=h}
+
+function restart(){cur=0;sc=0;ans=[];shuffle(Q);render();window.scrollTo({top:0,behavior:'smooth'})}
+render();
+</script>
+</body>
+</html>

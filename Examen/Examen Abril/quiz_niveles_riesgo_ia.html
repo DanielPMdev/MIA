@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Niveles de Riesgo IA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --prohibited: #DC2626;
+  --high: #D97706;
+  --limited: #2563EB;
+  --minimal: #059669;
+  --bg: #0f0a1e;
+  --card: #1a1333;
+  --card-border: #2d2450;
+  --text: #f0eef5;
+  --text-dim: #9890b0;
+  --correct: #22c55e;
+  --wrong: #ef4444;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* BACKGROUND */
+body::before {
+  content:''; position:fixed; inset:0; z-index:0;
+  background: radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.1) 0%, transparent 50%);
+}
+
+.app { position:relative; z-index:1; max-width:800px; margin:0 auto; padding:20px; }
+
+/* HEADER */
+.header { text-align:center; padding:30px 0 20px; }
+.header h1 {
+  font-family:'Playfair Display',serif; font-size:2rem; font-weight:800;
+  background:linear-gradient(135deg,#c084fc,#60a5fa,#34d399);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.header p { color:var(--text-dim); font-size:0.9rem; margin-top:6px; }
+
+/* PROGRESS */
+.progress-bar { width:100%; height:8px; background:#2d2450; border-radius:99px; margin:20px 0; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#8b5cf6,#60a5fa); border-radius:99px; transition:width 0.5s ease; }
+.progress-text { display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-dim); margin-bottom:6px; }
+
+/* QUESTION CARD */
+.question-card {
+  background: var(--card);
+  border:1px solid var(--card-border);
+  border-radius:20px;
+  padding:28px 24px;
+  margin-bottom:20px;
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+
+.q-number { font-size:0.75rem; color:#8b5cf6; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-bottom:10px; }
+.q-text { font-size:1.05rem; font-weight:500; line-height:1.65; color:var(--text); }
+.q-difficulty {
+  display:inline-block; margin-top:12px; padding:3px 12px;
+  border-radius:99px; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;
+}
+.diff-hard { background:rgba(239,68,68,0.15); color:#f87171; }
+.diff-tricky { background:rgba(251,191,36,0.15); color:#fbbf24; }
+.diff-expert { background:rgba(168,85,247,0.15); color:#c084fc; }
+
+/* OPTIONS GRID */
+.options { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px; }
+.opt-btn {
+  border:2px solid var(--card-border); background:rgba(45,36,80,0.5);
+  border-radius:14px; padding:18px 16px;
+  font-family:'DM Sans',sans-serif; font-size:0.92rem; font-weight:600;
+  color:var(--text); cursor:pointer;
+  transition:all 0.25s ease;
+  display:flex; align-items:center; gap:10px;
+  text-align:left;
+}
+.opt-btn:hover:not(.disabled) { border-color:#8b5cf6; background:rgba(139,92,246,0.1); transform:translateY(-2px); }
+.opt-btn .opt-icon { font-size:1.3rem; flex-shrink:0; }
+.opt-btn .opt-label { font-size:0.7rem; color:var(--text-dim); display:block; margin-bottom:2px; font-weight:500; }
+
+.opt-btn.selected-correct {
+  border-color:var(--correct); background:rgba(34,197,94,0.12);
+  animation:popCorrect 0.4s ease;
+}
+.opt-btn.selected-wrong {
+  border-color:var(--wrong); background:rgba(239,68,68,0.12);
+  animation:shake 0.4s ease;
+}
+.opt-btn.reveal-correct {
+  border-color:var(--correct); background:rgba(34,197,94,0.08);
+}
+.opt-btn.disabled { cursor:default; opacity:0.5; }
+.opt-btn.disabled.selected-correct, .opt-btn.disabled.reveal-correct { opacity:1; }
+.opt-btn.disabled.selected-wrong { opacity:0.8; }
+
+@keyframes popCorrect { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+
+/* FEEDBACK */
+.feedback {
+  border-radius:16px; padding:20px; margin-top:16px;
+  animation:fadeIn 0.3s ease;
+  line-height:1.6;
+}
+.feedback.correct { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.25); }
+.feedback.wrong { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); }
+.feedback .fb-title { font-weight:800; font-size:1rem; margin-bottom:8px; }
+.feedback.correct .fb-title { color:var(--correct); }
+.feedback.wrong .fb-title { color:var(--wrong); }
+.feedback .fb-text { font-size:0.85rem; color:var(--text-dim); }
+.feedback .fb-text strong { color:var(--text); }
+
+/* NEXT BUTTON */
+.next-btn {
+  display:block; width:100%; margin-top:16px; padding:16px;
+  background:linear-gradient(135deg,#8b5cf6,#6366f1);
+  border:none; border-radius:14px;
+  color:white; font-family:'DM Sans',sans-serif;
+  font-size:0.95rem; font-weight:700;
+  cursor:pointer; transition:all 0.25s;
+}
+.next-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(139,92,246,0.3); }
+
+/* RESULTS */
+.results {
+  text-align:center; padding:40px 20px;
+  animation:fadeIn 0.5s ease;
+}
+.results .score-circle {
+  width:160px; height:160px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  margin:0 auto 24px;
+  font-size:2.5rem; font-weight:800;
+  font-family:'Playfair Display',serif;
+}
+.results .score-label { font-size:0.8rem; font-weight:500; color:var(--text-dim); }
+.results h2 { font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:8px; }
+.results p { color:var(--text-dim); font-size:0.9rem; margin-bottom:30px; }
+.results .stat-row { display:flex; justify-content:center; gap:30px; margin-bottom:30px; }
+.results .stat { text-align:center; }
+.results .stat .num { font-size:1.5rem; font-weight:800; }
+.results .stat .lbl { font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; }
+
+.review-section { text-align:left; margin-top:20px; }
+.review-item {
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:14px; padding:16px; margin-bottom:10px;
+  display:flex; gap:12px; align-items:flex-start;
+}
+.review-icon { font-size:1.2rem; flex-shrink:0; margin-top:2px; }
+.review-q { font-size:0.82rem; color:var(--text-dim); line-height:1.5; }
+.review-q strong { color:var(--text); }
+
+@media(max-width:600px) {
+  .options { grid-template-columns:1fr; }
+  .header h1 { font-size:1.5rem; }
+  .q-text { font-size:0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const questions = [
+  {
+    text: "Una empresa de marketing analiza los rasgos faciales de los usuarios a través de la webcam mientras navegan por su tienda online, para detectar su estado de ánimo y adaptar los anuncios en tiempo real.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 2,
+    difficulty: "tricky",
+    explanation: "Es <strong>riesgo limitado</strong> (transparencia). El reconocimiento de emociones en un contexto comercial NO está prohibido, pero requiere informar a los usuarios. Solo se prohíbe en centros educativos y en el lugar de trabajo. Ojo con el contexto: misma tecnología, distinta clasificación según dónde se use."
+  },
+  {
+    text: "Un instituto de secundaria instala cámaras con IA que detectan si los alumnos están prestando atención o se están durmiendo en clase, analizando sus expresiones faciales.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0,
+    difficulty: "tricky",
+    explanation: "Es <strong>riesgo inaceptable (prohibido)</strong>. El reconocimiento de emociones en centros educativos está expresamente prohibido por el Art. 5. El contexto educativo es clave: la misma tecnología en una tienda sería riesgo limitado, pero aquí es una práctica prohibida."
+  },
+  {
+    text: "Un banco utiliza un sistema de IA que analiza el historial financiero, los ingresos y los gastos de una persona para decidir automáticamente si se le concede un préstamo hipotecario.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 1,
+    difficulty: "hard",
+    explanation: "Es <strong>riesgo alto</strong>. La evaluación de la solvencia crediticia de personas físicas está en el Anexo III como sistema de alto riesgo, ya que puede causar exclusión financiera. No es prohibido porque evalúa datos financieros objetivos, no comportamiento social."
+  },
+  {
+    text: "Una cadena de supermercados usa un sistema de IA que analiza datos de compra de los clientes (qué compran, cuándo, cuánto gastan) para asignarles una \"puntuación de fidelidad\" y ofrecerles descuentos personalizados.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 3,
+    difficulty: "expert",
+    explanation: "Es <strong>riesgo mínimo</strong>. Esto NO es puntuación social (social scoring). La puntuación social prohibida evalúa el <em>comportamiento social general</em> de las personas para causarles un trato perjudicial. Aquí solo se analizan datos de compra para dar descuentos en un contexto comercial concreto. Es una práctica comercial legítima."
+  },
+  {
+    text: "Un ayuntamiento implementa un sistema de IA que recopila datos de redes sociales, multas de tráfico, historial de pagos y denuncias vecinales de los ciudadanos, y les asigna una puntuación que determina su acceso prioritario a vivienda pública.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0,
+    difficulty: "hard",
+    explanation: "Es <strong>riesgo inaceptable (prohibido)</strong>. Esto SÍ es puntuación social: evalúa a personas por su comportamiento social en múltiples contextos durante un período de tiempo, y el resultado les causa un trato perjudicial (denegarles vivienda). Art. 5c lo prohíbe expresamente."
+  },
+  {
+    text: "Spotify utiliza un algoritmo de IA que analiza tus hábitos de escucha para recomendarte canciones y crear playlists personalizadas como \"Discover Weekly\".",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 3,
+    difficulty: "hard",
+    explanation: "Es <strong>riesgo mínimo</strong>. Los sistemas de recomendación de contenido (música, películas, vídeos) son de riesgo mínimo: no afectan a derechos fundamentales ni a decisiones críticas sobre la vida de las personas. No requieren regulación específica."
+  },
+  {
+    text: "Un hospital usa un sistema de IA que, cuando llegan pacientes a urgencias, analiza sus síntomas, constantes vitales e historial para asignarles un nivel de prioridad (triaje) y decidir quién es atendido primero.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 1,
+    difficulty: "tricky",
+    explanation: "Es <strong>riesgo alto</strong>. Los sistemas de triaje en urgencias y clasificación de llamadas de emergencia están explícitamente en el Anexo III como alto riesgo, porque toman decisiones críticas para la vida y la salud de las personas."
+  },
+  {
+    text: "Una empresa genera con IA un vídeo hiperrealista de un político diciendo que va a subir los impuestos un 50%, cuando en realidad nunca dijo eso. El vídeo se difunde en redes sociales sin ninguna indicación de que sea artificial.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 2,
+    difficulty: "expert",
+    explanation: "Es <strong>riesgo limitado</strong> (obligación de transparencia). Los deepfakes/ultrafalsificaciones NO están prohibidos, pero el Art. 50 obliga a revelar públicamente que el contenido fue generado artificialmente. Aquí se está incumpliendo esa obligación de transparencia, lo cual es una infracción, pero la tecnología en sí no es de riesgo inaceptable."
+  },
+  {
+    text: "Una empresa de juguetes lanza un muñeco con IA que habla con niños de 5 años. El sistema detecta que el niño está triste y le dice: \"Si quieres que deje de estar triste, dile a mamá que me compre el pack de accesorios premium\".",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0,
+    difficulty: "hard",
+    explanation: "Es <strong>riesgo inaceptable (prohibido)</strong>. El Art. 5b prohíbe los sistemas que explotan vulnerabilidades por edad (niños de 5 años) para alterar su comportamiento de forma perjudicial. Manipular emocionalmente a un menor para inducir compras es exactamente lo que la ley prohíbe."
+  },
+  {
+    text: "Una universidad utiliza un sistema de IA que corrige automáticamente los exámenes tipo test de sus 3.000 alumnos de primer curso y les asigna la nota final.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 1,
+    difficulty: "expert",
+    explanation: "Es <strong>riesgo alto</strong>. Los sistemas de IA usados para evaluar resultados de aprendizaje en centros educativos están en el Anexo III.3 como alto riesgo, porque determinan la trayectoria formativa y profesional de las personas. No es prohibido (no analiza emociones), pero sí requiere supervisión humana y gestión de riesgos."
+  },
+  {
+    text: "Una web de atención al cliente usa un chatbot con IA que resuelve dudas sobre envíos y devoluciones. Al iniciar la conversación, aparece un mensaje: \"Estás hablando con nuestro asistente virtual Sara\".",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 2,
+    difficulty: "hard",
+    explanation: "Es <strong>riesgo limitado</strong>. Los chatbots deben cumplir la obligación de transparencia del Art. 50: informar al usuario de que interactúa con una IA. En este caso lo están haciendo correctamente al indicar que \"Sara\" es un asistente virtual."
+  },
+  {
+    text: "La policía instala un sistema de cámaras con reconocimiento facial en tiempo real en el centro de una ciudad para identificar a todos los transeúntes y comprobar si tienen antecedentes penales.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0,
+    difficulty: "tricky",
+    explanation: "Es <strong>riesgo inaceptable (prohibido)</strong>. La identificación biométrica remota «en tiempo real» en espacios públicos con fines policiales está prohibida como norma general (Art. 5). Solo se permite en excepciones muy estrictas: búsqueda de víctimas de secuestro, prevención de atentados terroristas inminentes o localización de sospechosos de delitos muy graves."
+  },
+  {
+    text: "Una empresa de RRHH usa una IA que analiza los vídeos de las entrevistas de trabajo: evalúa el tono de voz, las expresiones faciales y el lenguaje corporal de los candidatos para puntuar su \"idoneidad\".",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 0,
+    difficulty: "expert",
+    explanation: "Es <strong>riesgo inaceptable (prohibido)</strong>. Aquí se combinan dos factores: es reconocimiento de emociones en el lugar de trabajo (prohibido por Art. 5) y además se usa para selección de personal. El reconocimiento de emociones en el ámbito laboral está expresamente vetado, independientemente de que la selección de personal por IA sería de alto riesgo por separado."
+  },
+  {
+    text: "Un filtro de spam de Gmail usa IA para detectar automáticamente correos fraudulentos o no deseados y enviarlos a la carpeta de spam sin que el usuario tenga que hacer nada.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 3,
+    difficulty: "hard",
+    explanation: "Es <strong>riesgo mínimo</strong>. Los filtros de spam son el ejemplo clásico de IA de riesgo mínimo. No afectan a derechos fundamentales, no toman decisiones críticas sobre personas y su uso es libre sin obligaciones específicas."
+  },
+  {
+    text: "Un sistema de IA instalado en un colegio detecta automáticamente si los alumnos están copiando durante un examen, analizando sus movimientos oculares y el giro de la cabeza mediante cámaras.",
+    options: ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"],
+    correct: 1,
+    difficulty: "expert",
+    explanation: "Es <strong>riesgo alto</strong>, no prohibido. Los sistemas para detectar comportamientos prohibidos de los estudiantes durante exámenes están en el Anexo III.3d como alto riesgo. La clave es que aquí se detectan <em>comportamientos</em> (copiar), no <em>emociones</em>. Si analizase emociones (estrés, nerviosismo), sería prohibido. Pero detectar movimientos físicos para pillar copias es alto riesgo con supervisión humana obligatoria."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answers = [];
+
+function render() {
+  if (current >= questions.length) { renderResults(); return; }
+  const q = questions[current];
+  const pct = (current / questions.length) * 100;
+  const diffClass = q.difficulty === 'hard' ? 'diff-hard' : q.difficulty === 'tricky' ? 'diff-tricky' : 'diff-expert';
+  const diffLabel = q.difficulty === 'hard' ? 'Difícil' : q.difficulty === 'tricky' ? 'Trampa' : 'Experto';
+  const icons = ["🚫","⚠️","ℹ️","✅"];
+  const colors = ["var(--prohibited)","var(--high)","var(--limited)","var(--minimal)"];
+  const labels = ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"];
+
+  let html = `
+    <div class="progress-text">
+      <span>Pregunta ${current+1} de ${questions.length}</span>
+      <span>${score} aciertos</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="question-card">
+      <div class="q-number">Pregunta ${current+1}</div>
+      <div class="q-text">${q.text}</div>
+      <span class="q-difficulty ${diffClass}">${diffLabel}</span>
+    </div>
+    <div class="options">
+  `;
+  q.options.forEach((opt, i) => {
+    html += `<button class="opt-btn" id="opt-${i}" onclick="answer(${i})">
+      <span class="opt-icon">${icons[i]}</span>
+      <div><span class="opt-label">${labels[i]}</span>${opt}</div>
+    </button>`;
+  });
+  html += `</div><div id="feedback-area"></div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function answer(idx) {
+  const q = questions[current];
+  const isCorrect = idx === q.correct;
+  if (isCorrect) score++;
+  answers.push({ idx: current, chosen: idx, correct: q.correct, isCorrect });
+
+  // Disable all buttons
+  document.querySelectorAll('.opt-btn').forEach((btn, i) => {
+    btn.classList.add('disabled');
+    btn.onclick = null;
+    if (i === idx && isCorrect) btn.classList.add('selected-correct');
+    if (i === idx && !isCorrect) btn.classList.add('selected-wrong');
+    if (i === q.correct && !isCorrect) btn.classList.add('reveal-correct');
+  });
+
+  const fbClass = isCorrect ? 'correct' : 'wrong';
+  const fbTitle = isCorrect ? '✅ ¡Correcto!' : '❌ Fallaste';
+  document.getElementById('feedback-area').innerHTML = `
+    <div class="feedback ${fbClass}">
+      <div class="fb-title">${fbTitle}</div>
+      <div class="fb-text">${q.explanation}</div>
+    </div>
+    <button class="next-btn" onclick="next()">${current < questions.length - 1 ? 'Siguiente pregunta →' : 'Ver resultados →'}</button>
+  `;
+}
+
+function next() {
+  current++;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderResults() {
+  const pct = Math.round((score / questions.length) * 100);
+  let grade, gradeColor, msg;
+  if (pct >= 90) { grade = "MATRÍCULA"; gradeColor = "#22c55e"; msg = "Dominas la clasificación de riesgo como un experto. Estás listo para el examen."; }
+  else if (pct >= 70) { grade = "NOTABLE"; gradeColor = "#60a5fa"; msg = "Buen nivel, pero repasa los matices de contexto (educación vs comercio, emociones vs comportamiento)."; }
+  else if (pct >= 50) { grade = "APROBADO JUSTO"; gradeColor = "#fbbf24"; msg = "Necesitas repasar. Las trampas están en el CONTEXTO: misma tecnología, distinta clasificación según dónde y para qué se use."; }
+  else { grade = "SUSPENSO"; gradeColor = "#ef4444"; msg = "Toca estudiar a fondo. Céntrate en: qué está prohibido (Art. 5), qué es alto riesgo (Anexo III) y cuándo aplica transparencia (Art. 50)."; }
+
+  const wrong = answers.filter(a => !a.isCorrect);
+
+  let html = `
+    <div class="results">
+      <div class="score-circle" style="border:4px solid ${gradeColor}; box-shadow:0 0 40px ${gradeColor}33">
+        ${score}/${questions.length}
+        <span class="score-label">${pct}%</span>
+      </div>
+      <h2 style="color:${gradeColor}">${grade}</h2>
+      <p>${msg}</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num" style="color:var(--correct)">${score}</div><div class="lbl">Aciertos</div></div>
+        <div class="stat"><div class="num" style="color:var(--wrong)">${questions.length - score}</div><div class="lbl">Fallos</div></div>
+        <div class="stat"><div class="num" style="color:#c084fc">${pct}%</div><div class="lbl">Nota</div></div>
+      </div>
+  `;
+
+  if (wrong.length > 0) {
+    html += `<div class="review-section"><h3 style="margin-bottom:14px; font-size:0.85rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em;">❌ Preguntas falladas — Repasa estas:</h3>`;
+    wrong.forEach(w => {
+      const q = questions[w.idx];
+      const labels = ["Riesgo inaceptable","Riesgo alto","Riesgo limitado","Riesgo mínimo"];
+      html += `<div class="review-item">
+        <span class="review-icon">❌</span>
+        <div class="review-q">
+          <strong>P${w.idx+1}:</strong> ${q.text.substring(0, 100)}...<br>
+          <span style="color:var(--wrong)">Tu respuesta: ${labels[w.chosen]}</span> →
+          <span style="color:var(--correct)">Correcta: ${labels[q.correct]}</span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<button class="next-btn" onclick="restart()" style="margin-top:24px">🔄 Repetir el quiz</button></div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function restart() {
+  current = 0; score = 0; answers = [];
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// HEADER
+document.getElementById('app').innerHTML = `
+  <div class="header">
+    <h1>Quiz: Niveles de Riesgo IA</h1>
+    <p>15 preguntas trampa · Reglamento UE 2024/1689</p>
+  </div>
+` + '<div id="quiz-content"></div>';
+
+// Override app to include header
+function renderWithHeader() {
+  let headerHtml = `<div class="header"><h1>Quiz: Niveles de Riesgo IA</h1><p>15 preguntas trampa · Reglamento UE 2024/1689</p></div>`;
+  const appEl = document.getElementById('app');
+  // Save current quiz content
+  render();
+  const quizContent = appEl.innerHTML;
+  appEl.innerHTML = headerHtml + quizContent;
+}
+
+render();
+// Prepend header
+const appEl = document.getElementById('app');
+const quizContent = appEl.innerHTML;
+appEl.innerHTML = `<div class="header"><h1>Quiz: Niveles de Riesgo IA</h1><p>15 preguntas trampa · Reglamento UE 2024/1689</p></div>` + quizContent;
+</script>
+</body>
+</html>

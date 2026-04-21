@@ -13,6 +13,13 @@ La asignatura de Modelos de Inteligencia Artificial tiene como propósito fundam
 📦 Modelos de Inteligencia Artificial
  ┣ 📂 Examen
  ┃ ┣ 📂 Examen Abril
+ ┃ ┃ ┣ 📄 Ejercicios Examen Abril _ SSML, Alexa, Intenciones, Slots... .pdf
+ ┃ ┃ ┣ 📄 apuntes_ssml_alexa_intenciones.html
+ ┃ ┃ ┣ 🔊 audio_apuntes_ssml_alexa_intenciones.mpeg
+ ┃ ┃ ┣ 📄 examen_ud10_ia_etica.html
+ ┃ ┃ ┣ 📄 quiz_completo_ud10.html
+ ┃ ┃ ┣ 📄 quiz_niveles_riesgo_ia.html
+ ┃ ┃ ┗ 📋 README.md
  ┃ ┣ 📂 Examen Enero
  ┃ ┃ ┣ 📂 Apuntes
  ┃ ┃ ┣ 📂 Ejercicios
@@ -202,11 +209,11 @@ Cierre ético en que se asientan discusiones reales alrededor del desvío moral 
 
 📂 [`Examen/`](./Examen/)
 
-Espacio de formación preparatoria organizado según convocatorias (Enero/Abril) el cual integra de gran forma revisiones generales, notas condensadas y evaluaciones de muestra de los temas centrales.
+Espacio de formación preparatoria organizado según convocatorias. El **Examen Enero** (primer parcial) integra resúmenes, ejercicios resueltos y preguntas tipo test de las unidades UD1 a UD5. El **Examen Abril** (segundo parcial) incorpora apuntes interactivos sobre SSML y componentes de Alexa, ejercicios de intenciones y slots, y quizzes de autoevaluación sobre niveles de riesgo del Reglamento UE 2024/1689 y ética en IA (UD6-UD10).
 
-**Conceptos clave:** `Repaso UD1-UD5` · `Ejercicios resueltos` · `Pruebas de evaluación`
+**Conceptos clave:** `Repaso UD1-UD5` · `Repaso UD6-UD10` · `SSML` · `Niveles de riesgo IA` · `Ejercicios resueltos` · `Quizzes interactivos`
 
-**Tecnologías:** `Ninguna`
+**Tecnologías:** `HTML` · `CSS` · `JavaScript`
 
 ---
 
@@ -223,6 +230,7 @@ Espacio de formación preparatoria organizado según convocatorias (Enero/Abril)
 | Amazon Lex y AWS Lambda             | Adopción integral para construir flujos automáticos discriminativos gestionado enteramente en nube       |
 | gTTS / edge-tts                     | Creación de sintética de voces (incluyendo neuronales de Microsoft Azure de borde)                       |
 | SpeechRecognition y deep-translator | Adaptador de Transcripción a y texto además de traducción integral de cadenas                            |
+| HTML / CSS / JavaScript             | Aplicaciones web interactivas de estudio: apuntes con pestañas y quizzes con retroalimentación           |
 
 ### Orden de estudio recomendado
 
